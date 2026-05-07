@@ -1,0 +1,3553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1"/>
+<title>ShopBook — Car Detailing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ─── RESET ─── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',sans-serif;font-size:14px;background:#0c0e14;color:#e2e5f0;-webkit-tap-highlight-color:transparent}
+button{cursor:pointer;font-family:inherit;border:none;background:none}
+input,textarea,select{font-family:inherit;appearance:none;-webkit-appearance:none}
+a{text-decoration:none;color:inherit}
+img{display:block}
+
+/* ─── VARIABLES ─── */
+:root{
+  --bg:#0c0e14;
+  --s1:#13161f;     /* sidebar */
+  --s2:#191d2a;     /* card */
+  --s3:#1f2436;     /* elevated card */
+  --s4:#252b3d;     /* hover/active */
+  --b1:#2a3047;     /* border */
+  --b2:#323b56;     /* border strong */
+  --accent:#4e8cff;
+  --accent-d:#3a72e8;
+  --accent-glow:rgba(78,140,255,0.12);
+  --green:#2ecc8f;
+  --green-bg:rgba(46,204,143,0.1);
+  --red:#ff5c6a;
+  --red-bg:rgba(255,92,106,0.1);
+  --amber:#f5a623;
+  --amber-bg:rgba(245,166,35,0.1);
+  --purple:#a78bfa;
+  --purple-bg:rgba(167,139,250,0.1);
+  --t1:#e2e5f0;
+  --t2:#8892b0;
+  --t3:#4a5575;
+  --sidebar-w:216px;
+  --topbar-h:54px;
+  --radius:12px;
+  --radius-sm:8px;
+  --radius-xs:5px;
+  --shadow:0 8px 32px rgba(0,0,0,0.5);
+  --shadow-sm:0 2px 12px rgba(0,0,0,0.3);
+}
+
+/* ─── LAYOUT ─── */
+#app{display:flex;height:100vh;overflow:hidden}
+/* ── DESKTOP SIDEBAR ── */
+#sidebar{
+  width:var(--sidebar-w);background:var(--s1);border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;flex-shrink:0;z-index:20;
+  transition:width 0.22s cubic-bezier(0.4,0,0.2,1);overflow:hidden;
+  /* Desktop: fixed to left edge, full height */
+  position:fixed;top:0;left:0;height:100vh;
+}
+#sidebar.collapsed{width:52px}
+#sidebar.collapsed .sb-shop-name,
+#sidebar.collapsed .sb-shop-tag,
+#sidebar.collapsed .nav-group-label,
+#sidebar.collapsed .nav-item span,
+#sidebar.collapsed .nav-badge,
+#sidebar.collapsed .sb-footer{display:none}
+#sidebar.collapsed .sb-logo{padding:14px 10px}
+#sidebar.collapsed .sb-shop-icon{margin-bottom:0}
+#sidebar.collapsed .nav-item{padding:10px;justify-content:center}
+#sidebar.collapsed .nav-item svg{width:18px;height:18px;opacity:0.7}
+#sidebar.collapsed .nav-item.active svg{opacity:1}
+/* sidebar-wrap is a spacer in the flex layout that matches sidebar width */
+#sidebar-wrap{
+  width:var(--sidebar-w);flex-shrink:0;position:relative;
+  transition:width 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+#sidebar-wrap.collapsed{width:52px}
+#sidebar-toggle{
+  position:fixed;bottom:14px;left:calc(var(--sidebar-w) - 14px);
+  width:28px;height:28px;border-radius:50%;background:var(--s2);
+  border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:30;color:var(--t3);transition:all 0.2s,left 0.22s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:var(--shadow-sm)
+}
+#sidebar-toggle:hover{color:var(--t1);background:var(--s3)}
+#sidebar-toggle svg{width:14px;height:14px;transition:transform 0.22s}
+#sidebar-wrap.collapsed #sidebar-toggle{left:38px}
+#sidebar-wrap.collapsed #sidebar-toggle svg{transform:rotate(180deg)}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#topbar{height:var(--topbar-h);background:var(--s1);border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0}
+#content{flex:1;overflow-y:auto;padding:24px 24px 40px}
+#bottom-nav{display:none}
+
+/* ─── SIDEBAR ─── */
+.sb-logo{padding:18px 16px 14px}
+.sb-shop-icon{width:34px;height:34px;border-radius:10px;background:var(--accent-glow);border:1px solid rgba(78,140,255,0.25);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.sb-shop-icon svg{width:17px;height:17px;color:var(--accent)}
+.sb-shop-name{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--t1);line-height:1.2}
+.sb-shop-tag{font-size:11px;color:var(--t3);margin-top:2px}
+.sb-nav{flex:1;padding:8px 10px;overflow-y:auto}
+.nav-group-label{font-size:10px;font-weight:600;color:var(--t3);letter-spacing:0.08em;text-transform:uppercase;padding:10px 8px 5px;margin-top:4px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--radius-sm);color:var(--t2);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.12s;margin-bottom:1px;width:100%;text-align:left;position:relative}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.nav-item:hover{background:var(--s3);color:var(--t1)}
+.nav-item.active{background:var(--accent-glow);color:var(--accent)}
+.nav-item.active svg{color:var(--accent)}
+.nav-badge{position:absolute;right:10px;background:var(--red);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.nav-badge.amber{background:var(--amber)}
+.sb-footer{padding:12px 16px;border-top:1px solid var(--b1);font-size:10px;color:var(--t3)}
+
+/* ─── TOPBAR ─── */
+#menu-toggle{display:none;color:var(--t2);padding:6px}
+#menu-toggle svg{width:20px;height:20px}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;flex:1;color:var(--t1)}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+
+/* ─── BUTTONS ─── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;transition:all 0.12s;cursor:pointer;white-space:nowrap;border:none}
+.btn svg{width:14px;height:14px;flex-shrink:0}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-d);transform:translateY(-1px)}
+.btn-ghost{background:var(--s3);color:var(--t2);border:1px solid var(--b1)}
+.btn-ghost:hover{background:var(--s4);color:var(--t1)}
+.btn-success{background:var(--green-bg);color:var(--green);border:1px solid rgba(46,204,143,0.2)}
+.btn-success:hover{background:rgba(46,204,143,0.18)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid rgba(255,92,106,0.2)}
+.btn-danger:hover{background:rgba(255,92,106,0.18)}
+.btn-wa{background:#25d366;color:#fff}
+.btn-wa:hover{background:#1db954;transform:translateY(-1px)}
+.btn-amber{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px}
+.btn-icon{padding:7px;border-radius:var(--radius-sm)}
+
+/* ─── CARDS ─── */
+.card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--radius);padding:20px}
+.card-0{padding:0}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-family:'Syne',sans-serif;font-weight:600;font-size:14px;color:var(--t1)}
+
+/* ─── KPI GRID ─── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px}
+.kpi{cursor:pointer;transition:transform 0.12s,box-shadow 0.12s,border-color 0.12s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.35)}
+.kpi.active{border-color:var(--accent)!important;box-shadow:0 0 0 2px var(--accent-glow)}
+/* Drill-down panel */
+.kpi-drill{
+  background:var(--s2);border:1px solid var(--b1);border-radius:var(--radius);
+  margin-bottom:20px;overflow:hidden;
+  animation:drillIn 0.18s ease;
+}
+@keyframes drillIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.kpi-drill-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid var(--b1);
+}
+.kpi-drill-title{font-family:'Syne',sans-serif;font-weight:600;font-size:14px;color:var(--t1)}
+.kpi-drill-body{padding:0}
+.kpi{background:var(--s2);border:1px solid var(--b1);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:80px;height:80px;border-radius:50%;opacity:0.06;transform:translate(20px,-20px)}
+.kpi.accent::before{background:var(--accent)}
+.kpi.green::before{background:var(--green)}
+.kpi.red::before{background:var(--red)}
+.kpi.amber::before{background:var(--amber)}
+.kpi.purple::before{background:var(--purple)}
+.kpi-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.kpi-icon svg{width:15px;height:15px}
+.kpi.accent .kpi-icon{background:var(--accent-glow);color:var(--accent)}
+.kpi.green .kpi-icon{background:var(--green-bg);color:var(--green)}
+.kpi.red .kpi-icon{background:var(--red-bg);color:var(--red)}
+.kpi.amber .kpi-icon{background:var(--amber-bg);color:var(--amber)}
+.kpi.purple .kpi-icon{background:var(--purple-bg);color:var(--purple)}
+.kpi-label{font-size:11px;font-weight:600;color:var(--t3);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px}
+.kpi-value{font-family:'Syne',sans-serif;font-weight:700;font-size:24px;color:var(--t1);line-height:1;margin-bottom:4px}
+.kpi.accent .kpi-value{color:var(--accent)}
+.kpi.green .kpi-value{color:var(--green)}
+.kpi.red .kpi-value{color:var(--red)}
+.kpi.amber .kpi-value{color:var(--amber)}
+.kpi.purple .kpi-value{color:var(--purple)}
+.kpi-sub{font-size:11px;color:var(--t3)}
+
+/* ─── TABLE ─── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:0.07em;text-transform:uppercase;padding:10px 14px;border-bottom:1px solid var(--b1);text-align:left;background:var(--s2);white-space:nowrap}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--b1);color:var(--t2);font-size:13px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{cursor:pointer;transition:background 0.1s}
+tbody tr:hover td{background:var(--s3);color:var(--t1)}
+tbody tr.no-hover{cursor:default}
+tbody tr.no-hover:hover td{background:transparent;color:var(--t2)}
+
+/* ─── BADGES ─── */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.01em;white-space:nowrap}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-blue{background:var(--accent-glow);color:var(--accent)}
+.badge-gray{background:var(--s4);color:var(--t2)}
+.badge-purple{background:var(--purple-bg);color:var(--purple)}
+
+/* ─── FORMS ─── */
+.form-grid{display:grid;gap:14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;font-weight:500;color:var(--t2)}
+.req{color:var(--red)}
+input,textarea,select{background:var(--s3);border:1px solid var(--b1);border-radius:var(--radius-xs);padding:9px 11px;color:var(--t1);font-size:13px;outline:none;transition:border-color 0.15s;width:100%}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+select option{background:var(--s3);color:var(--t1)}
+textarea{resize:vertical;min-height:68px;line-height:1.5}
+input[type="number"]{-moz-appearance:textfield}
+input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none}
+.input-prefix{position:relative}
+.input-prefix span{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:13px;pointer-events:none;font-family:'DM Mono',monospace}
+.input-prefix input{padding-left:22px}
+
+/* ─── MODAL ─── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)}
+.modal{background:var(--s2);border:1px solid var(--b1);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.modal-lg{max-width:680px}
+.modal-xl{max-width:800px}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--b1);flex-shrink:0}
+.modal-head h3{font-family:'Syne',sans-serif;font-weight:600;font-size:15px;color:var(--t1)}
+.modal-body{padding:20px 22px;flex:1;overflow-y:auto}
+.modal-foot{padding:14px 22px;border-top:1px solid var(--b1);display:flex;justify-content:flex-end;gap:9px;flex-shrink:0}
+.x-btn{color:var(--t3);padding:4px;border-radius:5px;display:flex}
+.x-btn:hover{color:var(--t1);background:var(--s4)}
+
+/* ─── SEARCH ─── */
+.search-box{position:relative}
+.search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t3);width:14px;height:14px;pointer-events:none}
+.search-box input{padding-left:32px}
+
+/* ─── DIVIDER ─── */
+hr{border:none;border-top:1px solid var(--b1);margin:16px 0}
+.section-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px}
+
+/* ─── EMPTY STATE ─── */
+.empty{text-align:center;padding:48px 20px}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:0.35}
+.empty h4{font-family:'Syne',sans-serif;font-weight:600;font-size:15px;color:var(--t2);margin-bottom:5px}
+.empty p{font-size:13px;color:var(--t3)}
+
+/* ─── QUICK TAGS ─── */
+.quick-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.qtag{background:var(--s3);border:1px solid var(--b1);border-radius:var(--radius-xs);padding:5px 11px;font-size:12px;color:var(--t2);cursor:pointer;transition:all 0.1s;white-space:nowrap}
+.qtag:hover{background:var(--s4);color:var(--t1);border-color:var(--accent)}
+
+/* ─── LINE ITEM EDITOR ─── */
+.li-table{width:100%;border-collapse:collapse;font-size:12px}
+.li-table th{color:var(--t3);font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;padding:5px 6px;border-bottom:1px solid var(--b1);text-align:left}
+.li-table td{padding:5px 4px;border-bottom:1px solid var(--b1)}
+.li-table tr:last-child td{border-bottom:none}
+.li-table input{padding:5px 7px;font-size:12px}
+.li-total-row{text-align:right;font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--accent);margin-top:8px}
+.li-margin{font-size:12px;color:var(--t3);text-align:right;margin-top:2px}
+
+/* ─── PRINT VIEW — A3 Detailing World Brand ─── */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500&display=swap');
+
+#print-overlay{
+  display:none;position:fixed;inset:0;background:#f2f2f0;z-index:500;
+  overflow-y:auto;padding:32px 20px;
+}
+.print-invoice{
+  max-width:740px;margin:0 auto;
+  font-family:'Barlow',sans-serif;color:#111;
+  background:#fff;
+  box-shadow:0 8px 48px rgba(0,0,0,0.18);
+}
+
+/* ── HEADER: full-bleed dark panel ── */
+.print-header{
+  background:#080808;
+  padding:32px 36px 28px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  position:relative;overflow:hidden;
+}
+.print-header::after{
+  content:'';position:absolute;
+  top:0;right:0;width:200px;height:100%;
+  background:linear-gradient(to left,rgba(212,43,43,0.12),transparent);
+  pointer-events:none;
+}
+.print-header::before{
+  content:'A3';position:absolute;
+  right:-20px;bottom:-28px;
+  font-family:'Bebas Neue',sans-serif;font-size:160px;
+  color:rgba(255,255,255,0.03);letter-spacing:-4px;
+  pointer-events:none;line-height:1;
+}
+
+/* Logo in header */
+.print-logo-wrap{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.print-logo-a{
+  background:#181818;width:42px;height:30px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:20px;color:#fff;
+  border-radius:3px 0 0 3px;
+}
+.print-logo-3{
+  background:#D42B2B;width:42px;height:30px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:20px;color:#fff;
+  border-radius:0 3px 3px 0;
+}
+.print-brand-name{
+  font-family:'Bebas Neue',sans-serif;font-size:22px;
+  color:#fff;letter-spacing:3px;line-height:1;
+}
+.print-brand-sub{
+  font-family:'Barlow Condensed',sans-serif;font-size:9px;
+  letter-spacing:4px;color:rgba(255,255,255,0.4);
+  text-transform:uppercase;margin-top:3px;
+}
+.print-contact-block{text-align:right;position:relative;z-index:1}
+.print-contact-phone{
+  font-family:'Bebas Neue',sans-serif;font-size:22px;
+  color:#D42B2B;letter-spacing:1px;line-height:1;margin-bottom:6px;
+}
+.print-contact-line{
+  font-family:'Barlow Condensed',sans-serif;font-size:11px;
+  color:rgba(255,255,255,0.5);letter-spacing:0.5px;line-height:1.7;
+}
+
+/* ── RED ACCENT STRIPE ── */
+.print-red-stripe{
+  height:4px;
+  background:linear-gradient(to right,#D42B2B,#ff4444,#A01E1E);
+}
+
+/* ── DOC TYPE SECTION ── */
+.print-doc-section{
+  padding:24px 36px 0;
+  display:flex;justify-content:space-between;align-items:flex-end;
+  border-bottom:1px solid #ececec;
+  padding-bottom:20px;
+  margin-bottom:0;
+}
+.print-doc-type-big{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:52px;line-height:1;
+  letter-spacing:5px;
+  color:#111;
+}
+.print-doc-type-big span{color:#D42B2B}
+.print-doc-meta{text-align:right}
+.print-doc-number{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:800;font-size:18px;letter-spacing:2px;color:#111;
+}
+.print-doc-date-label{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#999;
+  margin-top:4px;
+}
+.print-doc-date-val{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:14px;font-weight:600;color:#555;
+}
+
+/* ── CUSTOMER + VEHICLE BLOCK ── */
+.print-info-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  padding:24px 36px;gap:24px;
+  background:#fafafa;
+  border-bottom:1px solid #ececec;
+}
+.print-info-label{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:9px;font-weight:700;letter-spacing:4px;
+  text-transform:uppercase;color:#D42B2B;margin-bottom:6px;
+}
+.print-info-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:24px;letter-spacing:1px;color:#111;line-height:1;
+  margin-bottom:4px;
+}
+.print-info-sub{
+  font-family:'Barlow',sans-serif;
+  font-size:12px;color:#777;line-height:1.6;font-weight:300;
+}
+.print-vehicle-block{
+  display:flex;flex-direction:column;justify-content:center;
+}
+.print-vehicle-car{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;letter-spacing:1px;color:#111;line-height:1;
+  margin-bottom:4px;
+}
+.print-vehicle-details{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;
+}
+.print-vehicle-chip{
+  background:#111;color:#fff;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;
+  letter-spacing:2px;padding:3px 9px;border-radius:2px;
+  text-transform:uppercase;
+}
+.print-vehicle-chip.red{background:#D42B2B}
+
+/* ── ITEMS TABLE ── */
+.print-items-wrap{padding:0 36px}
+.print-items-wrap table{width:100%;border-collapse:collapse;margin-top:0}
+.print-items-wrap thead tr{
+  background:#111;
+}
+.print-items-wrap th{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:9px;font-weight:700;letter-spacing:4px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.55);
+  padding:11px 14px;text-align:left;
+}
+.print-items-wrap th:nth-child(2),
+.print-items-wrap th:nth-child(3){text-align:center}
+.print-items-wrap th:last-child{text-align:right}
+.print-items-wrap tbody tr{border-bottom:1px solid #f0f0f0}
+.print-items-wrap tbody tr:last-child{border-bottom:none}
+.print-items-wrap td{
+  padding:13px 14px;
+  font-size:13px;color:#333;
+  font-family:'Barlow',sans-serif;font-weight:400;
+}
+.print-items-wrap td:first-child{font-weight:500;color:#111}
+.print-items-wrap td:nth-child(2){text-align:center;color:#888;font-size:12px}
+.print-items-wrap td:nth-child(3){text-align:center;color:#888;font-size:12px}
+.print-items-wrap td:last-child{
+  text-align:right;
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;font-size:15px;color:#111;
+}
+
+/* ── TOTAL SECTION ── */
+.print-total-section{
+  margin:0 36px;
+  border-top:2px solid #111;
+  padding:16px 0 0;
+  display:flex;justify-content:flex-end;align-items:baseline;gap:20px;
+}
+.print-total-label{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:4px;
+  text-transform:uppercase;color:#999;
+}
+.print-total-amount{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:38px;letter-spacing:1px;color:#D42B2B;line-height:1;
+}
+
+/* ── NOTE ── */
+.print-note-block{
+  margin:20px 36px 0;
+  padding:14px 18px;
+  border-left:3px solid #D42B2B;
+  background:#fff8f8;
+  font-family:'Barlow',sans-serif;
+  font-size:12px;color:#555;line-height:1.6;font-weight:300;
+}
+.print-note-block strong{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:#D42B2B;font-size:10px;display:block;margin-bottom:4px;
+}
+
+/* ── BILL: Next service callout ── */
+.print-next-service{
+  margin:20px 36px 0;
+  background:#080808;
+  padding:12px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.print-next-service-label{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#D42B2B;
+}
+.print-next-service-date{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:18px;color:#fff;letter-spacing:2px;
+}
+
+/* ── FOOTER ── */
+.print-footer-section{
+  margin:28px 36px 0;
+  padding:16px 0;
+  border-top:1px solid #e8e8e8;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.print-footer-thanks{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:16px;letter-spacing:3px;color:#D42B2B;
+}
+.print-footer-right{
+  text-align:right;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:10px;color:#aaa;letter-spacing:1px;line-height:1.6;
+}
+.print-footer-tagline-bar{
+  background:#080808;
+  padding:10px 36px;
+  display:flex;align-items:center;justify-content:center;
+  gap:12px;
+}
+.print-footer-tagline-bar span{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,255,255,0.3);
+}
+.print-footer-tagline-bar .dot{
+  width:3px;height:3px;background:#D42B2B;border-radius:50%;flex-shrink:0;
+}
+
+/* ── WATERMARK STRIP (estimate only) ── */
+.print-estimate-watermark{
+  text-align:center;padding:8px;
+  font-family:'Bebas Neue',sans-serif;font-size:10px;
+  letter-spacing:6px;color:#e8e8e8;text-transform:uppercase;
+  background:#fafafa;border-bottom:1px solid #ececec;
+}
+
+/* Actions (screen only) */
+.print-actions{
+  display:flex;gap:10px;justify-content:flex-end;
+  margin-bottom:20px;flex-wrap:wrap;align-items:center;
+}
+.print-actions button{
+  padding:9px 18px;border-radius:3px;font-size:12px;cursor:pointer;border:none;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.print-btn-print{background:#D42B2B;color:#fff}
+.print-btn-wa{background:#25d366;color:#fff}
+.print-btn-copy{background:#080808;color:#fff}
+.print-btn-close{background:#e8e8e8;color:#333}
+.print-wa-tip{
+  font-size:12px;color:#888;background:#fffbea;
+  border:1px solid #f5d76e;border-radius:3px;
+  padding:10px 14px;margin-bottom:14px;line-height:1.5;
+}
+.print-wa-tip strong{color:#b8860b}
+@media print{
+  #print-overlay .print-actions{display:none!important}
+  #print-overlay .print-wa-tip{display:none!important}
+  #print-overlay{position:absolute;background:#fff;padding:0}
+  #app{display:none}
+  .print-invoice{box-shadow:none}
+}
+
+/* ─── CHART BARS ─── */
+.chart-wrap{display:flex;align-items:flex-end;gap:4px;height:140px;padding:8px 0 0}
+.cbar-group{flex:1;display:flex;gap:2px;align-items:flex-end}
+.cbar{border-radius:3px 3px 0 0;min-height:2px;transition:height 0.5s cubic-bezier(0.4,0,0.2,1)}
+.cbar.earned{background:var(--green)}
+.cbar.spent{background:var(--red)}
+.cbar.profit{background:var(--accent)}
+.chart-labels{display:flex;gap:4px;margin-top:6px}
+.chart-label{flex:1;text-align:center;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace}
+.chart-legend{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.cleg{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--t2)}
+.cleg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ─── SERVICE ALERT ─── */
+.service-alert{background:var(--red-bg);border:1px solid rgba(255,92,106,0.25);border-radius:var(--radius);padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px}
+.service-alert svg{width:18px;height:18px;color:var(--red);flex-shrink:0}
+.service-alert-title{font-size:13px;font-weight:600;color:var(--red)}
+.service-alert-sub{font-size:12px;color:var(--t3);margin-top:2px}
+
+/* ─── DETAIL LAYOUT ─── */
+.detail-grid{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+.detail-section{margin-bottom:20px}
+.dl{display:grid;gap:10px}
+.dl-row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--b1)}
+.dl-row:last-child{border-bottom:none}
+.dl-label{font-size:12px;color:var(--t3);font-weight:500}
+.dl-value{font-size:13px;color:var(--t1);text-align:right;font-weight:500}
+
+/* ─── TOAST ─── */
+#toast-root{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--s3);border:1px solid var(--b2);border-radius:var(--radius-sm);padding:11px 16px;font-size:13px;color:var(--t1);box-shadow:var(--shadow);animation:toastIn 0.2s ease;max-width:280px}
+.toast.ok{border-left:3px solid var(--green)}
+.toast.err{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--accent)}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── PROGRESS BAR ─── */
+.prog-bar{height:5px;background:var(--s4);border-radius:3px;overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;border-radius:3px;transition:width 0.4s}
+
+/* ─── BOTTOM NAV (mobile) ─── */
+@media(max-width:680px){
+  /* Hide desktop sidebar and toggle */
+  #sidebar-wrap{display:none}
+  #menu-toggle{display:flex}
+  #sidebar-toggle{display:none}
+
+  /* Mobile sidebar — already position:fixed, just needs transform + width overrides */
+  #sidebar{
+    z-index:300;
+    transform:translateX(-100%);
+    width:260px!important;
+    box-shadow:4px 0 24px rgba(0,0,0,0.5);
+  }
+  #sidebar.mob-open{transform:translateX(0)}
+  /* Override desktop collapse on mobile — always show full sidebar when open */
+  #sidebar.collapsed{width:260px!important}
+  #sidebar.collapsed .sb-shop-name,
+  #sidebar.collapsed .sb-shop-tag,
+  #sidebar.collapsed .nav-group-label,
+  #sidebar.collapsed .nav-item span,
+  #sidebar.collapsed .nav-badge,
+  #sidebar.collapsed .sb-footer{display:unset!important}
+  #sidebar.collapsed .nav-item{padding:9px 10px!important;justify-content:flex-start!important}
+  /* sidebar-wrap is just hidden on mobile (it's the desktop spacer) */
+
+  /* Backdrop */
+  #mob-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:299;backdrop-filter:blur(2px)}
+  #mob-backdrop.visible{display:block}
+
+  /* Bottom nav */
+  #bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--s1);border-top:1px solid var(--b1);z-index:100;padding:4px 0 env(safe-area-inset-bottom)}
+  .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;color:var(--t3);font-size:10px;font-weight:500;cursor:pointer;transition:color 0.15s;border:none;background:none;min-height:48px;justify-content:center}
+  .bn-item svg{width:22px;height:22px}
+  .bn-item.active{color:var(--accent)}
+
+  /* More sheet */
+  #more-sheet{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--s2);border:1px solid var(--b1);border-bottom:none;border-radius:16px 16px 0 0;z-index:200;padding:16px 0 calc(16px + env(safe-area-inset-bottom));box-shadow:0 -8px 32px rgba(0,0,0,0.5)}
+  #more-sheet.open{display:block}
+  .more-sheet-item{display:flex;align-items:center;gap:14px;padding:14px 22px;color:var(--t2);font-size:15px;font-weight:500;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+  .more-sheet-item svg{width:20px;height:20px;color:var(--t3)}
+  .more-sheet-item:active{background:var(--s3)}
+  .more-sheet-item.active{color:var(--accent)}
+  .more-sheet-item.active svg{color:var(--accent)}
+  .more-sheet-handle{width:36px;height:4px;background:var(--b2);border-radius:2px;margin:0 auto 14px}
+
+  /* Content area */
+  #content{padding:14px 14px 82px}
+
+  /* Layout fixes */
+  .detail-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .form-row-3{grid-template-columns:1fr 1fr}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+
+  /* Modals — bottom sheet on mobile */
+  .modal{max-width:100%;max-height:92vh;border-radius:16px 16px 0 0;margin-top:auto}
+  .overlay{align-items:flex-end;padding:0}
+
+  /* Topbar action buttons — icon only on mobile */
+  .topbar-actions .btn span{display:none}
+  .topbar-actions .btn{padding:8px}
+
+  /* Better tap targets */
+  tbody td{padding:13px 12px}
+  input,select,textarea{padding:11px 12px;font-size:16px}  /* 16px prevents iOS zoom */
+  .btn-sm{padding:8px 12px}
+  .qtag{padding:8px 14px;font-size:13px}
+  thead th{padding:10px 12px}
+}
+
+/* ─── UTILITIES ─── */
+.mono{font-family:'DM Mono',monospace}
+.fw6{font-weight:600}
+.fw7{font-weight:700}
+.c-green{color:var(--green)}
+.c-red{color:var(--red)}
+.c-amber{color:var(--amber)}
+.c-accent{color:var(--accent)}
+.c-muted{color:var(--t3)}
+.c-t2{color:var(--t2)}
+.mt4{margin-top:4px}
+.mt8{margin-top:8px}
+.mt12{margin-top:12px}
+.mt16{margin-top:16px}
+.mt20{margin-top:20px}
+.mb8{margin-bottom:8px}
+.mb12{margin-bottom:12px}
+.mb16{margin-bottom:16px}
+.flex{display:flex}
+.flex-1{flex:1}
+.gap6{gap:6px}
+.gap8{gap:8px}
+.gap10{gap:10px}
+.gap12{gap:12px}
+.items-center{align-items:center}
+.justify-between{justify-content:space-between}
+.text-right{text-align:right}
+.wrap{flex-wrap:wrap}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- PRINT OVERLAY -->
+<div id="print-overlay">
+  <div class="print-wa-tip" id="print-wa-tip" style="display:none">
+    <strong>📤 To share on WhatsApp:</strong><br/>
+    1. Tap <strong>"Save PDF"</strong> below → your phone will download/save the PDF<br/>
+    2. Then tap <strong>"Open WhatsApp"</strong> → tap the attachment 📎 icon → pick the PDF from Files<br/>
+    <span style="color:#aaa;font-size:11px">WhatsApp does not allow apps to attach files automatically — this 2-step process is the standard way.</span>
+  </div>
+  <div class="print-actions" id="print-actions">
+    <button class="print-btn-close" onclick="closePrint()">✕ Close</button>
+    <button class="print-btn-copy" id="btn-copy-text" onclick="printCopyText()">📋 Copy Text</button>
+    <button class="print-btn-wa" id="btn-open-wa" onclick="printOpenWA()" style="display:none">💬 Open WhatsApp</button>
+    <button class="print-btn-print" onclick="printSavePDF()">⬇ Save PDF</button>
+  </div>
+  <div class="print-invoice" id="print-content"></div>
+  <div class="print-footer">Generated by ShopBook · Thank you for your business</div>
+</div>
+
+<!-- ── SIDEBAR — lives outside #app so display:none on sidebar-wrap never traps it ── -->
+<div id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-shop-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div class="sb-shop-name" id="sb-name">ShopBook</div>
+    <div class="sb-shop-tag" id="sb-tag">Business Manager</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-group-label">Overview</div>
+    <button class="nav-item active" id="nav-dashboard" onclick="go('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <div class="nav-group-label">Work</div>
+    <button class="nav-item" id="nav-customers" onclick="go('customers')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Customers</span>
+    </button>
+    <button class="nav-item" id="nav-estimates" onclick="go('estimates')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Estimates</span>
+    </button>
+    <button class="nav-item" id="nav-bills" onclick="go('bills')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      <span>Bills</span>
+    </button>
+    <button class="nav-item" id="nav-reminders" onclick="go('reminders')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span>Reminders</span>
+      <span class="nav-badge amber" id="badge-reminders" style="display:none">0</span>
+    </button>
+    <div class="nav-group-label">Finance</div>
+    <button class="nav-item" id="nav-expenses" onclick="go('expenses')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span>Expenses</span>
+    </button>
+    <button class="nav-item" id="nav-reports" onclick="go('reports')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Reports</span>
+    </button>
+    <button class="nav-item" id="nav-documents" onclick="go('documents')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span>Documents</span>
+    </button>
+  </nav>
+  <div class="sb-footer">ShopBook v2.0 · Car Detailing Edition</div>
+</div>
+
+<div id="mob-backdrop" onclick="closeMobileMenu()"></div>
+<div id="app">
+  <!-- Desktop sidebar placeholder (maintains layout width) -->
+  <div id="sidebar-wrap">
+    <button id="sidebar-toggle" onclick="toggleSidebar()" title="Collapse sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <div id="main">
+    <div id="topbar">
+      <button id="menu-toggle" onclick="toggleMobileMenu()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="topbar-title" id="page-title">Dashboard</span>
+      <div class="topbar-actions" id="topbar-actions"></div>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<div id="bottom-nav">
+  <button class="bn-item active" id="bn-dashboard" onclick="go('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Home
+  </button>
+  <button class="bn-item" id="bn-customers" onclick="go('customers')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    Customers
+  </button>
+  <button class="bn-item" id="bn-bills" onclick="go('bills')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    Bills
+  </button>
+  <button class="bn-item" id="bn-reminders" onclick="go('reminders')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    Alerts
+  </button>
+  <button class="bn-item" id="bn-more" onclick="toggleMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+    More
+  </button>
+</div>
+
+<!-- MORE SHEET (mobile — Estimates, Expenses, Reports, Documents) -->
+<div id="more-sheet">
+  <div class="more-sheet-handle"></div>
+  <button class="more-sheet-item" id="ms-estimates" onclick="go('estimates');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Estimates
+  </button>
+  <button class="more-sheet-item" id="ms-expenses" onclick="go('expenses');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Expenses
+  </button>
+  <button class="more-sheet-item" id="ms-reports" onclick="go('reports');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Reports
+  </button>
+  <button class="more-sheet-item" id="ms-documents" onclick="go('documents');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    Documents
+  </button>
+</div>
+
+<div id="toast-root"></div>
+
+<script>
+'use strict';
+// ══════════════════════════════════════════════════════════════
+//  CONFIG — swap this block per client in 5 minutes
+// ══════════════════════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkwfkPeL0h3oYnTqSzcxCUvWfoAjdbFfKf9rR6ynKI6LmVROwws7TbGArnFefWQMI/exec';
+
+const CFG = {
+  shop: { name: 'A3 Detailing World', tag: 'Car Care & Detailing · Pune', phone: '+91 89991 17607', locationCode: 'L' },
+  currency: '₹',
+  customFields: [
+    { id: 'car',   label: 'Car Model'  },
+    { id: 'color', label: 'Color'      },
+    { id: 'reg',   label: 'Reg No'     },
+    { id: 'year',  label: 'Year'       },
+  ],
+  products: [
+    { name: 'Basic Exterior Wash',      price: 500   },
+    { name: 'Interior Cleaning',        price: 800   },
+    { name: 'Full Interior + Exterior', price: 1200  },
+    { name: 'Engine Bay Cleaning',      price: 600   },
+    { name: 'Paint Polish',             price: 2500  },
+    { name: 'Ceramic Coating',          price: 8000  },
+    { name: 'PPF (Partial)',            price: 5000  },
+    { name: 'Headlight Restoration',    price: 800   },
+    { name: 'Scratch Removal',          price: 1500  },
+    { name: 'Seat Shampooing',          price: 1000  },
+  ],
+  expenseCategories: ['Rent', 'Salaries', 'Electricity', 'Chemicals & Products', 'Equipment', 'Marketing', 'Other'],
+  serviceReminder: true,
+  jobCostTracking: true,
+};
+
+// ══════════════════════════════════════════════════════════════
+//  STORAGE LAYER — swap internals for Google Sheets / Supabase
+// ══════════════════════════════════════════════════════════════
+// ── Storage layer: localStorage-first + Google Sheets sync ──
+const _get = k => {
+  try { return JSON.parse(localStorage.getItem('cd_'+k)) || []; }
+  catch { return []; }
+};
+const _set = (k, v) => {
+  localStorage.setItem('cd_'+k, JSON.stringify(v));
+};
+
+// ── Sync queue ──
+let _syncQueue = [];
+let _syncBusy  = false;
+let _syncStatus = 'idle'; // 'idle' | 'syncing' | 'error' | 'ok'
+
+function _loadQueue() {
+  try { _syncQueue = JSON.parse(localStorage.getItem('_syncQueue') || '[]'); }
+  catch { _syncQueue = []; }
+}
+function _saveQueue() {
+  localStorage.setItem('_syncQueue', JSON.stringify(_syncQueue));
+}
+
+function _queueSync(table, action, record) {
+  // Remove earlier pending op for same id to avoid redundant writes
+  _syncQueue = _syncQueue.filter(op =>
+    !(op.table === table && op.record?.id === record?.id && op.action !== 'delete')
+  );
+  _syncQueue.push({ table, action, record });
+  _saveQueue();
+  _flushQueue();
+  _updateSyncBadge();
+}
+
+async function _flushQueue() {
+  if(_syncBusy || _syncQueue.length === 0 || !navigator.onLine) return;
+  _syncBusy   = true;
+  _syncStatus = 'syncing';
+  _updateSyncBadge();
+  while(_syncQueue.length > 0) {
+    const op = _syncQueue[0];
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body:    JSON.stringify(op),
+        signal:  AbortSignal.timeout(12000),
+      });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      _syncQueue.shift();
+      _saveQueue();
+    } catch(err) {
+      _syncStatus = 'error';
+      _syncBusy   = false;
+      _updateSyncBadge();
+      return;
+    }
+  }
+  _syncStatus = 'ok';
+  _syncBusy   = false;
+  _updateSyncBadge();
+}
+
+async function _pullFromSheets() {
+  if(!navigator.onLine) return;
+  try {
+    const tables = ['customers','estimates','bills','expenses','reminders'];
+    for(const t of tables) {
+      const res     = await fetch(SCRIPT_URL + '?table=' + t,
+        { signal: AbortSignal.timeout(15000) });
+      const records = await res.json();
+      if(Array.isArray(records)) {
+        localStorage.setItem('cd_'+t, JSON.stringify(records));
+      }
+    }
+    _syncStatus = 'ok';
+    _updateSyncBadge();
+    if(typeof PAGE !== 'undefined') go(PAGE, DETAIL_ID);
+  } catch(err) {
+    _syncStatus = 'error';
+    _updateSyncBadge();
+  }
+}
+
+function _updateSyncBadge() {
+  const el = document.getElementById('sync-badge');
+  if(!el) return;
+  const pending = _syncQueue.length;
+  if(_syncStatus === 'syncing') {
+    el.textContent = '↑ Syncing…';
+    el.style.color = 'var(--amber)';
+  } else if(_syncStatus === 'error') {
+    el.textContent = pending ? `⚠ ${pending} unsynced` : '⚠ Offline';
+    el.style.color = 'var(--red)';
+  } else if(pending > 0) {
+    el.textContent = `↑ ${pending} pending`;
+    el.style.color = 'var(--amber)';
+  } else if(_syncStatus === 'ok') {
+    el.textContent = '✓ Synced';
+    el.style.color = 'var(--green)';
+  }
+}
+
+// Retry when connection restored
+window.addEventListener('online', () => { _flushQueue(); _pullFromSheets(); });
+// Pull fresh data when user returns to app
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible') { _flushQueue(); _pullFromSheets(); }
+});
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const now  = () => new Date().toISOString();
+const today = () => new Date().toISOString().slice(0,10);
+
+function _crud(key) {
+  return {
+    all:    ()     => _get(key),
+    find:   id     => _get(key).find(r => r.id === id),
+    create: data   => {
+      const r = { id:uid(), createdAt:now(), ...data };
+      const a = _get(key); a.push(r); _set(key, a);
+      _queueSync(key, 'upsert', r);
+      return r;
+    },
+    update: (id,d) => {
+      const a = _get(key).map(r => r.id===id ? {...r,...d,updatedAt:now()} : r);
+      _set(key, a);
+      const r = a.find(r => r.id===id);
+      if(r) _queueSync(key, 'upsert', r);
+      return r;
+    },
+    remove: id => {
+      _set(key, _get(key).filter(r => r.id!==id));
+      _queueSync(key, 'delete', { id });
+    },
+  };
+}
+const DB = {
+  customers: _crud('customers'),
+  estimates: _crud('estimates'),
+  bills:     _crud('bills'),
+  expenses:  _crud('expenses'),
+  reminders: _crud('reminders'),
+};
+
+// ══════════════════════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════════════════════
+const fmt  = n  => CFG.currency + Number(n||0).toLocaleString('en-IN');
+
+// ── Vehicle helpers ──
+// A customer's vehicles are stored as c.vehicles = [{id,car,color,reg,year}, ...]
+// Legacy customers may have c.customFields = {car,color,reg,year} — we normalise on read.
+function getVehicles(c) {
+  if(!c) return [];
+  if(c.vehicles && c.vehicles.length) return c.vehicles;
+  // Migrate legacy flat customFields to vehicles array
+  const cf = c.customFields||{};
+  if(cf.car||cf.reg) return [{ id:'v0', car:cf.car||'', color:cf.color||'', reg:cf.reg||'', year:cf.year||'' }];
+  return [];
+}
+function vehicleLabel(v) {
+  if(!v) return '—';
+  const parts = [v.car, v.color, v.reg].filter(Boolean);
+  return parts.join(' · ') || '—';
+}
+function vehicleShort(v) {
+  if(!v) return '—';
+  return [v.car, v.reg].filter(Boolean).join(' · ') || '—';
+}
+function vuid() { return 'v'+Math.random().toString(36).slice(2,7); }
+const fmtD = s  => s ? new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+const fmtM = m  => new Date(m+'-01').toLocaleString('en-IN',{month:'short',year:'numeric'});
+const lineTotal = items => (items||[]).reduce((s,i)=>s+(i.qty*i.price),0);
+const monthOf   = iso   => (iso||'').slice(0,7);
+const addMonths = (date,n) => { const d=new Date(date); d.setMonth(d.getMonth()+n); return d.toISOString().slice(0,10); };
+
+function toast(msg, type='ok') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toast-root').appendChild(el);
+  setTimeout(() => el.style.opacity='0', 2700);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function icon(name) {
+  const ic = {
+    plus:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+    edit:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>',
+    trash:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>',
+    x:        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    check:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+    wa:       '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.557 4.126 1.527 5.855L.057 23.882l6.205-1.462A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.861 0-3.617-.5-5.13-1.376l-.369-.215-3.686.868.936-3.595-.24-.38A9.956 9.956 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>',
+    print:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
+    convert:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>',
+    download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+    bell:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+    search:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+    back:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>',
+    copy:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    warn:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  };
+  return ic[name]||'';
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard','info')).catch(() => toast('Copy failed','err'));
+}
+
+function csvDownload(csv, filename) {
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = filename; a.click();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  WHATSAPP HELPERS
+// ══════════════════════════════════════════════════════════════
+function buildEstimateText(est) {
+  const c  = DB.customers.find(est.customerId);
+  const total = lineTotal(est.items);
+  const vehicles = getVehicles(c);
+  const v  = est.vehicleId ? vehicles.find(x=>x.id===est.vehicleId) : vehicles[0];
+  const line = '─────────────────────';
+
+  let txt = '';
+  txt += `🔴 *A3 DETAILING WORLD*\n`;
+  txt += `_DE${String.fromCharCode(960)}AILING WORLD · PUNE_\n`;
+  txt += `\n`;
+  txt += `*ESTIMATE ${est.number}*\n`;
+  txt += `_${fmtD(est.createdAt)}_\n`;
+  txt += `${line}\n`;
+  txt += `\n`;
+
+  // Customer
+  if (c) {
+    txt += `👤 *${c.name}*\n`;
+    if (c.phone) txt += `📞 ${c.phone}\n`;
+  }
+
+  // Vehicle
+  if (v && v.car) {
+    txt += `🚗 *${v.car}*`;
+    if (v.color) txt += `  _${v.color}_`;
+    if (v.reg)   txt += `  · ${v.reg}`;
+    txt += `\n`;
+  }
+
+  txt += `\n${line}\n`;
+  txt += `*SERVICES*\n`;
+  txt += `${line}\n`;
+  txt += `\n`;
+
+  // Line items
+  est.items.forEach(i => {
+    const amount = fmt(i.qty * i.price);
+    if (i.qty > 1) {
+      txt += `▪ ${i.desc} ×${i.qty}\n`;
+      txt += `   ${' '.repeat(2)}${amount}\n`;
+    } else {
+      txt += `▪ ${i.desc}\n`;
+      txt += `   ${amount}\n`;
+    }
+  });
+
+  txt += `\n${line}\n`;
+  txt += `💰 *TOTAL: ${fmt(total)}*\n`;
+  txt += `${line}\n`;
+
+  if (est.notes) {
+    txt += `\n📋 _${est.notes}_\n`;
+  }
+
+  txt += `\n`;
+  txt += `_This estimate is valid for 7 days._\n`;
+  txt += `_Subject to final inspection._\n`;
+  txt += `\n`;
+  txt += `To confirm, reply *YES* or call us 👇\n`;
+  txt += `📞 +91 89991 17607\n`;
+  txt += `📍 Hadapsar & Lohegaon, Pune`;
+
+  return txt;
+}
+
+function buildBillText(bill) {
+  const c  = DB.customers.find(bill.customerId);
+  const vehicles = getVehicles(c);
+  const v  = bill.vehicleId ? vehicles.find(x=>x.id===bill.vehicleId) : vehicles[0];
+  const line = '─────────────────────';
+
+  let txt = '';
+  txt += `🔴 *A3 DETAILING WORLD*\n`;
+  txt += `_DE${String.fromCharCode(960)}AILING WORLD · PUNE_\n`;
+  txt += `\n`;
+  txt += `*BILL ${bill.number}*\n`;
+  txt += `_${fmtD(bill.createdAt)}_\n`;
+  txt += `${line}\n`;
+  txt += `\n`;
+
+  // Customer
+  if (c) {
+    txt += `👤 *${c.name}*\n`;
+    if (c.phone) txt += `📞 ${c.phone}\n`;
+  }
+
+  // Vehicle
+  if (v && v.car) {
+    txt += `🚗 *${v.car}*`;
+    if (v.color) txt += `  _${v.color}_`;
+    if (v.reg)   txt += `  · ${v.reg}`;
+    txt += `\n`;
+  }
+
+  txt += `\n${line}\n`;
+  txt += `*SERVICES*\n`;
+  txt += `${line}\n`;
+  txt += `\n`;
+
+  // Line items
+  bill.items.forEach(i => {
+    const amount = fmt(i.qty * i.price);
+    if (i.qty > 1) {
+      txt += `▪ ${i.desc} ×${i.qty}\n`;
+      txt += `   ${amount}\n`;
+    } else {
+      txt += `▪ ${i.desc}\n`;
+      txt += `   ${amount}\n`;
+    }
+  });
+
+  txt += `\n${line}\n`;
+  txt += `💰 *TOTAL: ${fmt(bill.total)}*\n`;
+  txt += `${line}\n`;
+
+  if (bill.notes) {
+    txt += `\n📋 _${bill.notes}_\n`;
+  }
+
+  // Next service
+  if (bill.nextServiceDate) {
+    txt += `\n🔔 *Next service recommended:*\n`;
+    txt += `   _${fmtD(bill.nextServiceDate)}_\n`;
+  }
+
+  txt += `\n`;
+  txt += `Thank you for choosing A3 🙏\n`;
+  txt += `\n`;
+  txt += `📞 +91 89991 17607\n`;
+  txt += `📍 Hadapsar & Lohegaon, Pune`;
+
+  return txt;
+}
+
+function buildServiceReminderText(c, bill) {
+  const vehicles = getVehicles(c);
+  const v = bill?.vehicleId ? vehicles.find(x=>x.id===bill.vehicleId) : vehicles[0];
+  let txt = `Hi ${c.name.split(' ')[0]} bhai! 🙏\n\n`;
+  txt += `This is a reminder from *${CFG.shop.name}*.\n\n`;
+  txt += `Your ${v?.car||'vehicle'} is due for detailing this month.`;
+  if (v?.reg) txt += ` (${v.reg})`;
+  txt += `\n\nLast service was on ${fmtD(bill?.paidAt||bill?.createdAt||'')}.\n\n`;
+  txt += `Reply to book a slot! 😊`;
+  return txt;
+}
+
+// Track share events on estimates and bills
+function markShared(collection, id) {
+  const rec = DB[collection].find(id);
+  if(rec) DB[collection].update(id, {sharedAt: now(), sharedCount: (rec.sharedCount||0)+1});
+}
+
+function waShare(phone, text) {
+  const num = (phone||'').replace(/\D/g,'');
+  const url = `https://wa.me/${num?'91'+num:''}?text=${encodeURIComponent(text)}`;
+  window.open(url,'_blank');
+}
+
+// Called from estimate/bill detail pages — tracks share and opens WA
+function waShareDoc(collection, id) {
+  const doc = DB[collection].find(id);
+  const c   = DB.customers.find(doc.customerId);
+  const text = collection==='estimates' ? buildEstimateText(doc) : buildBillText(doc);
+  markShared(collection, id);
+  waShare(c?.phone||'', text);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PRINT / PDF
+// ══════════════════════════════════════════════════════════════
+// Active print doc context
+let _printDoc = null;
+let _printCollection = null;
+
+function printDoc(type, doc) {
+  _printDoc = doc;
+  _printCollection = type === 'estimate' ? 'estimates' : 'bills';
+  const c = DB.customers.find(doc.customerId);
+  const items = doc.items||[];
+  const total = doc.total || lineTotal(items);
+  // Show/hide WA button based on whether customer has a phone number
+  const waBtn = document.getElementById('btn-open-wa');
+  const waTip = document.getElementById('print-wa-tip');
+  if(c?.phone){ waBtn.style.display='inline-flex'; waTip.style.display='block'; }
+  else { waBtn.style.display='none'; waTip.style.display='none'; }
+  // Get vehicle for this doc
+  const vehicles = getVehicles(c);
+  const docVehicle = doc.vehicleId ? vehicles.find(v=>v.id===doc.vehicleId) : vehicles[0];
+  const isEst = type==='estimate';
+
+  const invoiceHtml = `
+  <div class="print-invoice">
+
+    <!-- Dark header -->
+    <div class="print-header">
+      <div>
+        <div class="print-logo-wrap">
+          <div class="print-logo-a">A</div>
+          <div class="print-logo-3">3</div>
+        </div>
+        <div class="print-brand-name">A3 DETAILING WORLD</div>
+        <div class="print-brand-sub">DE&pi;AILING WORLD &middot; PUNE</div>
+      </div>
+      <div class="print-contact-block">
+        <div class="print-contact-phone">+91 89991 17607</div>
+        <div class="print-contact-line">a3detailingworld@gmail.com</div>
+        <div class="print-contact-line">Pune-Solapur Hwy, Opp. Bank of Baroda</div>
+        <div class="print-contact-line">Hadapsar, Pune &mdash; 411 028</div>
+        <div class="print-contact-line" style="color:rgba(212,43,43,0.7)">Also at Lohegaon, Pune</div>
+      </div>
+    </div>
+
+    <!-- Red accent stripe -->
+    <div class="print-red-stripe"></div>
+
+    <!-- Doc type + number -->
+    <div class="print-doc-section">
+      <div class="print-doc-type-big">
+        ${isEst
+          ? '<span>ESTI</span>MATE'
+          : '<span>BILL</span>'}
+      </div>
+      <div class="print-doc-meta">
+        <div class="print-doc-number">${doc.number}</div>
+        <div class="print-doc-date-label">Date</div>
+        <div class="print-doc-date-val">${fmtD(doc.createdAt)}</div>
+      </div>
+    </div>
+
+    <!-- Estimate watermark note -->
+    ${isEst ? `<div class="print-estimate-watermark">This is an estimate &mdash; subject to final inspection &middot; Valid for 7 days</div>` : ''}
+
+    <!-- Customer + Vehicle -->
+    <div class="print-info-grid">
+      <div>
+        <div class="print-info-label">${isEst ? 'Prepared For' : 'Bill To'}</div>
+        <div class="print-info-name">${c ? c.name.toUpperCase() : '—'}</div>
+        <div class="print-info-sub">
+          ${c?.phone ? c.phone : ''}
+          ${c?.phone && c?.address ? '<br>' : ''}
+          ${c?.address ? c.address : ''}
+        </div>
+      </div>
+      <div class="print-vehicle-block">
+        ${docVehicle ? `
+          <div class="print-info-label">Vehicle</div>
+          <div class="print-vehicle-car">${(docVehicle.car||'').toUpperCase()}</div>
+          <div class="print-vehicle-details">
+            ${docVehicle.color ? `<span class="print-vehicle-chip">${docVehicle.color}</span>` : ''}
+            ${docVehicle.reg   ? `<span class="print-vehicle-chip red">${docVehicle.reg}</span>` : ''}
+            ${docVehicle.year  ? `<span class="print-vehicle-chip">${docVehicle.year}</span>` : ''}
+          </div>
+        ` : `<div class="print-info-label" style="opacity:0">&nbsp;</div>`}
+      </div>
+    </div>
+
+    <!-- Items table -->
+    <div class="print-items-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50%">Service / Description</th>
+            <th>Qty</th>
+            <th>Rate</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map((item, idx) => `<tr style="${idx % 2 === 1 ? 'background:#fafafa' : ''}">
+            <td>${item.desc}</td>
+            <td style="text-align:center">${item.qty}</td>
+            <td style="text-align:center">${fmt(item.price)}</td>
+            <td style="text-align:right;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:#111">${fmt(item.qty * item.price)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Total -->
+    <div class="print-total-section">
+      <div class="print-total-label">${isEst ? 'Estimate Total' : 'Total Amount'}</div>
+      <div class="print-total-amount">${fmt(total)}</div>
+    </div>
+
+    <!-- Notes -->
+    ${doc.notes ? `
+    <div class="print-note-block">
+      <strong>Note</strong>
+      ${doc.notes}
+    </div>` : ''}
+
+    <!-- Next service callout (bills only) -->
+    ${!isEst && doc.nextServiceDate ? `
+    <div class="print-next-service">
+      <div class="print-next-service-label">Next Service Recommended</div>
+      <div class="print-next-service-date">${fmtD(doc.nextServiceDate)}</div>
+    </div>` : ''}
+
+    <!-- Footer -->
+    <div class="print-footer-section">
+      <div class="print-footer-thanks">Thank You For Choosing A3</div>
+      <div class="print-footer-right">
+        +91 89991 17607<br>
+        a3detailingworld@gmail.com
+      </div>
+    </div>
+
+    <!-- Bottom tag bar -->
+    <div class="print-footer-tagline-bar">
+      <span>DE&pi;AILING WORLD</span>
+      <div class="dot"></div>
+      <span>HADAPSAR &amp; LOHEGAON, PUNE</span>
+      <div class="dot"></div>
+      <span>PROFESSIONAL CAR CARE</span>
+      <div class="dot"></div>
+      <span>SINCE 2022</span>
+    </div>
+
+  </div>
+  `;
+  document.getElementById('print-content').innerHTML = invoiceHtml;
+  document.getElementById('print-overlay').style.display = 'block';
+  document.getElementById('app').style.display = 'none';
+}
+
+function printSavePDF() {
+  // Mark as shared when PDF is saved
+  if(_printDoc && _printCollection) markShared(_printCollection, _printDoc.id);
+  window.print();
+}
+
+function printOpenWA() {
+  if(!_printDoc) return;
+  const c = DB.customers.find(_printDoc.customerId);
+  if(!c?.phone){ toast('No phone number for this customer','err'); return; }
+  if(_printCollection) markShared(_printCollection, _printDoc.id);
+  const num = c.phone.replace(/\D/g,'');
+  window.open(`https://wa.me/91${num}`,'_blank');
+}
+
+function printCopyText() {
+  if(!_printDoc || !_printCollection) return;
+  const text = _printCollection==='estimates'
+    ? buildEstimateText(_printDoc)
+    : buildBillText(_printDoc);
+  if(_printCollection) markShared(_printCollection, _printDoc.id);
+  copyText(text);
+}
+
+function closePrint() {
+  document.getElementById('print-overlay').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  _printDoc = null; _printCollection = null;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════════════
+let PAGE = 'dashboard';
+let DETAIL_ID = null;
+let MODAL_EL = null;
+
+const PAGE_TITLES = {
+  dashboard:'Dashboard', customers:'Customers', estimates:'Estimates',
+  bills:'Bills', reminders:'Reminders', expenses:'Expenses', reports:'Reports', documents:'Documents',
+  'cust-detail':'Customer', 'est-detail':'Estimate', 'bill-detail':'Bill',
+};
+
+// All nav IDs across sidebar + bottom nav
+const NAV_PAGES = ['dashboard','customers','estimates','bills','reminders','expenses','reports','documents'];
+
+function go(page, id) {
+  PAGE = page; DETAIL_ID = id||null;
+
+  // Auto-close mobile menu + more sheet on any navigation
+  closeMobileMenu();
+  closeMoreSheet();
+  // Reset dashboard drill state when leaving dashboard
+  if(page !== 'dashboard') _dashDrill = null;
+
+  // Sidebar active state
+  NAV_PAGES.forEach(p => {
+    const el = document.getElementById('nav-'+p);
+    if(el) el.classList.toggle('active', p===page);
+  });
+  // Bottom nav active (4 fixed items)
+  ['dashboard','customers','bills','reminders'].forEach(p => {
+    const el = document.getElementById('bn-'+p);
+    if(el) el.classList.toggle('active', p===page);
+  });
+  // More sheet items active state
+  ['estimates','expenses','reports','documents'].forEach(p => {
+    const el = document.getElementById('ms-'+p);
+    if(el) el.classList.toggle('active', p===page);
+  });
+  // More button highlights when on a "more" page
+  const morePages = ['estimates','expenses','reports','documents'];
+  const bnMore = document.getElementById('bn-more');
+  if(bnMore) bnMore.classList.toggle('active', morePages.includes(page));
+
+  const titleMap = { ...PAGE_TITLES };
+  document.getElementById('page-title').textContent = titleMap[page] || 'ShopBook';
+  document.getElementById('topbar-actions').innerHTML = '';
+  document.getElementById('content').innerHTML = '';
+  updateBadges();
+  const pages = { dashboard:pgDashboard, customers:pgCustomers, 'cust-detail':pgCustDetail,
+    estimates:pgEstimates, 'est-detail':pgEstDetail, bills:pgBills, 'bill-detail':pgBillDetail,
+    reminders:pgReminders, expenses:pgExpenses, reports:pgReports, documents:pgDocuments };
+  if(pages[page]) pages[page]();
+}
+
+function updateBadges() {
+  const pending = DB.reminders.all().filter(r=>!r.done).length;
+  const badge = document.getElementById('badge-reminders');
+  if(badge){ badge.style.display = pending?'flex':'none'; badge.textContent = pending; }
+}
+
+let _sidebarCollapsed = false;
+
+function toggleSidebar() {
+  _sidebarCollapsed = !_sidebarCollapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed', _sidebarCollapsed);
+  document.getElementById('sidebar-wrap').classList.toggle('collapsed', _sidebarCollapsed);
+}
+
+function toggleMobileMenu() {
+  // Mobile — open drawer
+  const sb  = document.getElementById('sidebar');
+  const bd  = document.getElementById('mob-backdrop');
+  const open = sb.classList.contains('mob-open');
+  if(open){ closeMobileMenu(); }
+  else { sb.classList.add('mob-open'); bd.classList.add('visible'); }
+}
+
+function closeMobileMenu() {
+  document.getElementById('sidebar').classList.remove('mob-open');
+  document.getElementById('mob-backdrop').classList.remove('visible');
+}
+
+function toggleMoreSheet() {
+  const sheet = document.getElementById('more-sheet');
+  sheet.classList.toggle('open');
+}
+
+function closeMoreSheet() {
+  document.getElementById('more-sheet').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════════════════
+function openModal(html, size='') {
+  closeModal();
+  const ov = document.createElement('div');
+  ov.className = 'overlay'; ov.id = 'modal-root';
+  ov.onclick = e => { if(e.target===ov) closeModal(); };
+  ov.innerHTML = `<div class="modal ${size}">${html}</div>`;
+  document.body.appendChild(ov);
+  MODAL_EL = ov;
+  setTimeout(() => ov.querySelector('input,select,textarea')?.focus(), 100);
+}
+function closeModal() { if(MODAL_EL){ MODAL_EL.remove(); MODAL_EL=null; } }
+
+// ══════════════════════════════════════════════════════════════
+//  LINE ITEM STATE (shared between estimate & bill modals)
+// ══════════════════════════════════════════════════════════════
+let LI = []; // [{desc,qty,price,cost?}]
+let MODAL_VEHICLES = []; // [{id,car,color,reg,year}] — live state for customer modal
+
+function liRender() {
+  const wrap = document.getElementById('li-wrap');
+  if(!wrap) return;
+  const total = LI.reduce((s,i)=>s+(i.qty*i.price),0);
+  const totalCost = LI.reduce((s,i)=>s+(i.qty*(i.cost||0)),0);
+  wrap.innerHTML = LI.length===0
+    ? `<div style="color:var(--t3);font-size:13px;padding:10px 0">No items yet — use Quick Add or fill in below</div>`
+    : `<table class="li-table">
+        <thead><tr>
+          <th style="width:40%">Description</th>
+          <th>Qty</th>
+          <th>Price</th>
+          ${CFG.jobCostTracking?'<th>Cost</th>':''}
+          <th>Amount</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+          ${LI.map((item,i)=>`<tr>
+            <td><input value="${item.desc}" oninput="LI[${i}].desc=this.value"/></td>
+            <td><input type="number" value="${item.qty}" style="width:54px" onchange="LI[${i}].qty=parseFloat(this.value)||1;liRender()"/></td>
+            <td><input type="number" value="${item.price}" style="width:80px" onchange="LI[${i}].price=parseFloat(this.value)||0;liRender()"/></td>
+            ${CFG.jobCostTracking?`<td><input type="number" value="${item.cost||''}" placeholder="0" style="width:80px" onchange="LI[${i}].cost=parseFloat(this.value)||0;liRender()"/></td>`:''}
+            <td class="mono" style="color:var(--accent)">${fmt(item.qty*item.price)}</td>
+            <td><button class="btn btn-danger btn-xs btn-icon" onclick="LI.splice(${i},1);liRender()">${icon('trash')}</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  const totalEl = document.getElementById('li-total');
+  if(totalEl) { totalEl.innerHTML = `Total: <span class="c-accent">${fmt(total)}</span>`; }
+  // Update estimate margin preview if open
+  if(CFG.jobCostTracking) updateEstMarginPreview();
+  const marginEl = document.getElementById('li-margin');
+  if(marginEl && CFG.jobCostTracking) {
+    const margin = total - totalCost;
+    const pct = total>0?Math.round(margin/total*100):0;
+    marginEl.innerHTML = totalCost>0 ? `Job Cost: ${fmt(totalCost)} · Margin: <span class="${margin>=0?'c-green':'c-red'}">${fmt(margin)} (${pct}%)</span>` : '';
+  }
+}
+
+function liAdd() {
+  const d=document.getElementById('li-desc'), q=document.getElementById('li-qty'), p=document.getElementById('li-price');
+  if(!d||!d.value.trim()){toast('Enter a description','err');return;}
+  LI.push({desc:d.value.trim(),qty:parseFloat(q.value)||1,price:parseFloat(p.value)||0,cost:0});
+  d.value=''; q.value='1'; p.value='';
+  d.focus(); liRender();
+}
+function liPreset(name,price){LI.push({desc:name,qty:1,price,cost:0});liRender();}
+
+function populateVehicleDropdown(custSelectId, vehicleSelectId, selectedVehicleId) {
+  const custId = document.getElementById(custSelectId)?.value;
+  const vSel   = document.getElementById(vehicleSelectId);
+  if(!vSel) return;
+  if(!custId) { vSel.innerHTML = '<option value="">Select customer first…</option>'; return; }
+  const c = DB.customers.find(custId);
+  const vehicles = getVehicles(c);
+  if(vehicles.length === 0) {
+    vSel.innerHTML = '<option value="">No vehicles on file</option>';
+    return;
+  }
+  vSel.innerHTML = vehicles.map((v,i) =>
+    `<option value="${v.id}" ${v.id===selectedVehicleId?'selected':''}>${vehicleLabel(v)}</option>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════════════════════
+let _dashDrill = null; // 'customers' | 'revenue' | 'unpaid' | 'estimates' | null
+
+function dashDrill(key) {
+  _dashDrill = _dashDrill === key ? null : key; // toggle
+  pgDashboard();
+  // Scroll the drill panel into view
+  setTimeout(() => {
+    const el = document.getElementById('kpi-drill-panel');
+    if(el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 60);
+}
+
+function renderDrillPanel() {
+  if(!_dashDrill) return '';
+  const mo = today().slice(0,7);
+  const bills = DB.bills.all();
+  const ests  = DB.estimates.all();
+  const custs = DB.customers.all();
+
+  if(_dashDrill === 'customers') {
+    const sorted = custs.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+    return `<div class="kpi-drill" id="kpi-drill-panel">
+      <div class="kpi-drill-head">
+        <span class="kpi-drill-title">All Customers (${custs.length})</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="custModal()">${icon('plus')} New</button>
+          <button class="btn btn-ghost btn-sm" onclick="go('customers')">Full view</button>
+          <button class="btn btn-ghost btn-xs btn-icon" onclick="dashDrill(null)">${icon('x')}</button>
+        </div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Name</th><th>Vehicle</th><th>Phone</th><th>Bills</th></tr></thead>
+        <tbody>
+          ${sorted.length===0
+            ? `<tr class="no-hover"><td colspan="4" style="text-align:center;color:var(--t3);padding:24px">No customers yet</td></tr>`
+            : sorted.map(c=>{
+                const v=getVehicles(c)[0];
+                const bCnt=bills.filter(b=>b.customerId===c.id).length;
+                const unpaidAmt=bills.filter(b=>b.customerId===c.id&&b.status==='unpaid').reduce((s,b)=>s+b.total,0);
+                return `<tr onclick="go('cust-detail','${c.id}')">
+                  <td class="fw6">${c.name}</td>
+                  <td class="c-t2" style="font-size:12px">${v?vehicleShort(v):'—'}</td>
+                  <td class="mono" style="font-size:12px">${c.phone||'—'}</td>
+                  <td>
+                    <span class="badge badge-blue">${bCnt}</span>
+                    ${unpaidAmt?`<span class="badge badge-red" style="margin-left:4px">${fmt(unpaidAmt)}</span>`:''}
+                  </td>
+                </tr>`;
+              }).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
+  }
+
+  if(_dashDrill === 'revenue') {
+    const paidBills = bills.filter(b=>b.status==='paid'&&monthOf(b.createdAt)===mo)
+      .sort((a,b)=>new Date(b.paidAt||b.createdAt)-new Date(a.paidAt||a.createdAt));
+    const total = paidBills.reduce((s,b)=>s+b.total,0);
+    const jobCostTotal = paidBills.filter(b=>b.jobCost).reduce((s,b)=>s+b.jobCost,0);
+    const grossMargin = total - jobCostTotal;
+    return `<div class="kpi-drill" id="kpi-drill-panel">
+      <div class="kpi-drill-head">
+        <span class="kpi-drill-title">Collected This Month — ${new Date().toLocaleString('en-IN',{month:'long',year:'numeric'})}</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="go('bills')">All bills</button>
+          <button class="btn btn-ghost btn-xs btn-icon" onclick="dashDrill(null)">${icon('x')}</button>
+        </div>
+      </div>
+      ${paidBills.length===0
+        ? `<div style="text-align:center;color:var(--t3);padding:28px;font-size:13px">No bills collected this month yet</div>`
+        : `<div class="tbl-wrap"><table>
+          <thead><tr><th>Bill</th><th>Customer</th><th>Vehicle</th><th>Revenue</th>${CFG.jobCostTracking?'<th>Job Cost</th><th>Margin</th>':''}</tr></thead>
+          <tbody>
+            ${paidBills.map(b=>{
+              const c=DB.customers.find(b.customerId);
+              const v=b.vehicleId?getVehicles(c).find(x=>x.id===b.vehicleId):getVehicles(c)[0];
+              const margin=b.jobCost?b.total-b.jobCost:null;
+              return`<tr onclick="go('bill-detail','${b.id}')">
+                <td class="mono c-accent">${b.number}</td>
+                <td class="fw6">${c?c.name:'—'}</td>
+                <td class="c-t2" style="font-size:12px">${v?v.car||v.reg:'—'}</td>
+                <td class="mono c-green fw6">${fmt(b.total)}</td>
+                ${CFG.jobCostTracking?`
+                  <td class="mono c-muted">${b.jobCost?fmt(b.jobCost):'—'}</td>
+                  <td class="mono fw6 ${margin!==null?(margin>=0?'c-green':'c-red'):'c-muted'}">${margin!==null?fmt(margin):'—'}</td>
+                `:''}
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+        <div style="display:grid;grid-template-columns:repeat(${CFG.jobCostTracking?'3':'1'},1fr);gap:16px;padding:14px 18px;background:var(--s3);border-top:1px solid var(--b1)">
+          <div><div class="section-label">Total Collected</div><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:var(--green)">${fmt(total)}</div></div>
+          ${CFG.jobCostTracking?`
+          <div><div class="section-label">Job Costs</div><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:var(--red)">${fmt(jobCostTotal)}</div></div>
+          <div><div class="section-label">Gross Margin</div><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:${grossMargin>=0?'var(--green)':'var(--red)'}">${fmt(grossMargin)}</div></div>
+          `:''}
+        </div>`}
+    </div>`;
+  }
+
+  if(_dashDrill === 'unpaid') {
+    const unpaidBills = bills.filter(b=>b.status==='unpaid')
+      .sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt)); // oldest first
+    const total = unpaidBills.reduce((s,b)=>s+b.total,0);
+    return `<div class="kpi-drill" id="kpi-drill-panel">
+      <div class="kpi-drill-head">
+        <span class="kpi-drill-title">Unpaid Bills — ${fmt(total)} outstanding</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="go('bills')">All bills</button>
+          <button class="btn btn-ghost btn-xs btn-icon" onclick="dashDrill(null)">${icon('x')}</button>
+        </div>
+      </div>
+      ${unpaidBills.length===0
+        ? `<div style="text-align:center;color:var(--green);padding:28px;font-size:13px">✓ No unpaid bills!</div>`
+        : `<div class="tbl-wrap"><table>
+          <thead><tr><th>Bill</th><th>Customer</th><th>Vehicle</th><th>Amount</th><th>Age</th><th></th></tr></thead>
+          <tbody>
+            ${unpaidBills.map(b=>{
+              const c=DB.customers.find(b.customerId);
+              const v=b.vehicleId?getVehicles(c).find(x=>x.id===b.vehicleId):getVehicles(c)[0];
+              const days=Math.floor((new Date()-new Date(b.createdAt))/86400000);
+              const aged=days>14?'c-red':days>7?'c-amber':'c-muted';
+              return`<tr onclick="go('bill-detail','${b.id}')">
+                <td class="mono c-accent">${b.number}</td>
+                <td class="fw6">${c?c.name:'—'}</td>
+                <td class="c-t2" style="font-size:12px">${v?v.car||v.reg:'—'}</td>
+                <td class="mono fw6 c-red">${fmt(b.total)}</td>
+                <td class="mono ${aged}" style="font-size:12px">${days===0?'Today':days===1?'1 day':days+' days'}</td>
+                <td onclick="event.stopPropagation()" style="display:flex;gap:5px">
+                  ${c?.phone?`<button class="btn btn-wa btn-xs btn-icon" onclick="waShareDoc('bills','${b.id}')">${icon('wa')}</button>`:''}
+                  <button class="btn btn-success btn-xs" onclick="event.stopPropagation();markPaid('${b.id}')">${icon('check')}</button>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`}
+    </div>`;
+  }
+
+  if(_dashDrill === 'estimates') {
+    const draftEsts = ests.filter(e=>e.status==='draft')
+      .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+    return `<div class="kpi-drill" id="kpi-drill-panel">
+      <div class="kpi-drill-head">
+        <span class="kpi-drill-title">Pending Estimates (${draftEsts.length})</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="estModal()">${icon('plus')} New</button>
+          <button class="btn btn-ghost btn-sm" onclick="go('estimates')">All estimates</button>
+          <button class="btn btn-ghost btn-xs btn-icon" onclick="dashDrill(null)">${icon('x')}</button>
+        </div>
+      </div>
+      ${draftEsts.length===0
+        ? `<div style="text-align:center;color:var(--t3);padding:28px;font-size:13px">No pending estimates</div>`
+        : `<div class="tbl-wrap"><table>
+          <thead><tr><th>Estimate</th><th>Customer</th><th>Vehicle</th><th>Value</th>${CFG.jobCostTracking?'<th>Exp. Margin</th>':''}<th>Age</th><th></th></tr></thead>
+          <tbody>
+            ${draftEsts.map(e=>{
+              const c=DB.customers.find(e.customerId);
+              const v=e.vehicleId?getVehicles(c).find(x=>x.id===e.vehicleId):getVehicles(c)[0];
+              const total=lineTotal(e.items);
+              const margin=e.expectedJobCost?total-e.expectedJobCost:null;
+              const days=Math.floor((new Date()-new Date(e.createdAt))/86400000);
+              const aged=days>7?'c-amber':'c-muted';
+              return`<tr onclick="go('est-detail','${e.id}')">
+                <td class="mono c-accent">${e.number}</td>
+                <td class="fw6">${c?c.name:'—'}</td>
+                <td class="c-t2" style="font-size:12px">${v?v.car||v.reg:'—'}</td>
+                <td class="mono fw6">${fmt(total)}</td>
+                ${CFG.jobCostTracking?`<td class="mono ${margin!==null?(margin>=0?'c-green':'c-red'):'c-muted'}">${margin!==null?fmt(margin):'—'}</td>`:''}
+                <td class="mono ${aged}" style="font-size:12px">${days===0?'Today':days===1?'1 day':days+' days'}</td>
+                <td onclick="event.stopPropagation()" style="display:flex;gap:5px">
+                  ${c?.phone?`<button class="btn btn-wa btn-xs btn-icon" onclick="waShareDoc('estimates','${e.id}')" title="Share">${icon('wa')}</button>`:''}
+                  <button class="btn btn-primary btn-xs" onclick="event.stopPropagation();estConvert('${e.id}')" title="Convert to Bill">${icon('convert')}</button>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`}
+    </div>`;
+  }
+  return '';
+}
+
+function pgDashboard() {
+  const custs  = DB.customers.all();
+  const bills  = DB.bills.all();
+  const exps   = DB.expenses.all();
+  const ests   = DB.estimates.all();
+  const rems   = DB.reminders.all().filter(r=>!r.done);
+
+  // Birthday alerts — today and tomorrow
+  const _now = new Date();
+  const _tom = new Date(_now); _tom.setDate(_tom.getDate()+1);
+  const todayDDMM    = String(_now.getDate()).padStart(2,'0')+'/'+String(_now.getMonth()+1).padStart(2,'0');
+  const tomorrowDDMM = String(_tom.getDate()).padStart(2,'0')+'/'+String(_tom.getMonth()+1).padStart(2,'0');
+  const birthdayAlerts = DB.customers.all().filter(c => {
+    if(!c.dob) return false;
+    const ddmm = c.dob.slice(0,5); // DD/MM from DD/MM/YYYY
+    return ddmm===todayDDMM || ddmm===tomorrowDDMM;
+  }).map(c=>({c, isToday: c.dob.slice(0,5)===todayDDMM}));
+  const mo     = today().slice(0,7);
+  const moBills  = bills.filter(b=>monthOf(b.createdAt)===mo);
+  const revenue     = moBills.filter(b=>b.status==='paid').reduce((s,b)=>s+b.total,0);
+  const unpaid      = bills.filter(b=>b.status==='unpaid').reduce((s,b)=>s+b.total,0);
+  const moOverhead  = exps.filter(e=>e.date.startsWith(mo)).reduce((s,e)=>s+e.amount,0);
+  const moJobCosts  = moBills.filter(b=>b.status==='paid'&&b.jobCost).reduce((s,b)=>s+b.jobCost,0);
+  const grossMargin = revenue - moJobCosts;           // collected minus what jobs actually cost
+  const netProfit   = grossMargin - moOverhead;        // gross minus rent/salaries/etc
+  const pendEst     = ests.filter(e=>e.status==='draft').length;
+
+  // Service due alerts
+  const serviceDue = CFG.serviceReminder ? bills.filter(b=>{
+    if(!b.nextServiceDate) return false;
+    const due = new Date(b.nextServiceDate);
+    const diff = (due - new Date()) / 86400000;
+    return diff <= 30;
+  }).map(b=>{
+    const c = DB.customers.find(b.customerId);
+    const overdue = new Date(b.nextServiceDate) < new Date();
+    return {b,c,overdue};
+  }) : [];
+
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    ${serviceDue.length>0?`
+      <div class="service-alert mb16" onclick="go('reminders')" style="cursor:pointer">
+        ${icon('warn')}
+        <div>
+          <div class="service-alert-title">${serviceDue.length} customer${serviceDue.length>1?'s':''} due for service${serviceDue.filter(x=>x.overdue).length?' — some overdue!':''}</div>
+          <div class="service-alert-sub">Click to view and send reminders</div>
+        </div>
+      </div>`:''}
+
+    <div class="kpi-grid">
+      <div class="kpi accent ${_dashDrill==='customers'?'active':''}" onclick="dashDrill('customers')" title="Click to see all customers">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="kpi-label">Customers</div>
+        <div class="kpi-value">${custs.length}</div>
+        <div class="kpi-sub">Total in book</div>
+      </div>
+      <div class="kpi green ${_dashDrill==='revenue'?'active':''}" onclick="dashDrill('revenue')" title="Click to see this month's collections">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <div class="kpi-label">Collected This Month</div>
+        <div class="kpi-value">${fmt(revenue)}</div>
+        <div class="kpi-sub">${moBills.filter(b=>b.status==='paid').length} bills paid${moJobCosts?` · Job costs ${fmt(moJobCosts)}`:''}</div>
+      </div>
+      <div class="kpi red ${_dashDrill==='unpaid'?'active':''}" onclick="dashDrill('unpaid')" title="Click to see all unpaid bills">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+        <div class="kpi-label">Unpaid Bills</div>
+        <div class="kpi-value">${fmt(unpaid)}</div>
+        <div class="kpi-sub">${bills.filter(b=>b.status==='unpaid').length} pending</div>
+      </div>
+      <div class="kpi amber ${_dashDrill==='estimates'?'active':''}" onclick="dashDrill('estimates')" title="Click to see pending estimates">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="kpi-label">Pending Estimates</div>
+        <div class="kpi-value">${pendEst}</div>
+        <div class="kpi-sub">Awaiting conversion</div>
+      </div>
+    </div>
+
+    ${renderDrillPanel()}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">
+      <!-- Recent Bills -->
+      <div class="card card-0">
+        <div class="card-header" style="padding:16px 18px 0">
+          <span class="card-title">Recent Bills</span>
+          <button class="btn btn-ghost btn-sm" onclick="go('bills')">View all</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Customer</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody>
+              ${bills.slice(-5).reverse().map(b=>{const c=DB.customers.find(b.customerId);return`<tr onclick="go('bill-detail','${b.id}')">
+                <td class="fw6">${c?c.name:'—'}</td>
+                <td class="mono">${fmt(b.total)}</td>
+                <td><span class="badge ${b.status==='paid'?'badge-green':'badge-red'}">${b.status}</span></td>
+              </tr>`;}).join('')||`<tr class="no-hover"><td colspan="3"><div class="empty" style="padding:24px"><div class="empty-icon">🧾</div><p>No bills yet</p></div></td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Reminders -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Pending Reminders${rems.length?` (${rems.length})`:''}</span>
+          <button class="btn btn-ghost btn-sm" onclick="go('reminders')">View all</button>
+        </div>
+        ${birthdayAlerts.map(({c,isToday})=>`
+          <div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--b1)">
+            <span style="font-size:18px">🎂</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;color:var(--purple)">${isToday?'Birthday today':'Birthday tomorrow'} — ${c.name}</div>
+              <div style="font-size:11px;color:var(--t3)">${c.dob}${c.phone?' · '+c.phone:''}</div>
+            </div>
+            ${c.phone?`<button class="btn btn-wa btn-xs" onclick="event.stopPropagation();waShare('${c.phone}','Happy Birthday ${c.name}! 🎂 Wishing you a great day! 🙏')">${icon('wa')}</button>`:''}
+          </div>`).join('')}
+        ${rems.length===0 && birthdayAlerts.length===0 ?`<div class="empty" style="padding:24px"><div class="empty-icon">✅</div><p>All clear</p></div>`:rems.length===0?``
+          :rems.slice(0,4).map(r=>{const c=r.customerId?DB.customers.find(r.customerId):null;const od=r.dueDate&&new Date(r.dueDate)<new Date();return`
+          <div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--b1)">
+            <button class="btn btn-success btn-xs" onclick="remDone('${r.id}',event)">${icon('check')}</button>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;color:var(--t1)">${r.note}</div>
+              ${c?`<div style="font-size:11px;color:var(--t3)">${c.name}${c.customFields?.vehicle?' · '+c.customFields.vehicle:''}</div>`:''}
+              ${r.dueDate?`<div style="font-size:11px;color:${od?'var(--red)':'var(--amber)'}">${od?'⚠ Overdue':'Due'}: ${fmtD(r.dueDate)}</div>`:''}
+            </div>
+            ${c?.phone?`<button class="btn btn-wa btn-xs" onclick="event.stopPropagation();waShare('${c.phone}','Hi ${c.name}, '+document.getElementById('dash-rem-${r.id}')?.dataset.msg)"
+              title="WhatsApp">${icon('wa')}</button>`:''}
+          </div>
+          <span id="dash-rem-${r.id}" data-msg="${r.note}" style="display:none"></span>
+          `}).join('')}
+      </div>
+    </div>
+
+    <!-- Month snapshot -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">This Month — ${new Date().toLocaleString('en-IN',{month:'long',year:'numeric'})}</span>
+        <button class="btn btn-ghost btn-sm" onclick="go('reports')">Full Report</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:12px">
+        <div style="background:var(--s3);border-radius:var(--radius-sm);padding:12px 16px">
+          <div class="section-label mb4">Collected</div>
+          <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:var(--green)">${fmt(revenue)}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">Revenue from ${moBills.filter(b=>b.status==='paid').length} jobs</div>
+        </div>
+        <div style="background:var(--s3);border-radius:var(--radius-sm);padding:12px 16px">
+          <div class="section-label mb4">Job Costs</div>
+          <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:var(--red)">${fmt(moJobCosts)}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">Chemicals & products used</div>
+        </div>
+        <div style="background:var(--s3);border-radius:var(--radius-sm);padding:12px 16px">
+          <div class="section-label mb4">Gross Margin</div>
+          <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:${grossMargin>=0?'var(--green)':'var(--red)'}">${fmt(grossMargin)}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">After job costs, before overhead</div>
+        </div>
+        <div style="background:var(--s3);border-radius:var(--radius-sm);padding:12px 16px">
+          <div class="section-label mb4">Overhead Expenses</div>
+          <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:var(--red)">${fmt(moOverhead)}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">Rent, salaries, electricity</div>
+        </div>
+      </div>
+      <div style="background:${netProfit>=0?'var(--green-bg)':'var(--red-bg)'};border:1px solid ${netProfit>=0?'rgba(46,204,143,0.25)':'rgba(255,92,106,0.25)'};border-radius:var(--radius-sm);padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="section-label">Net Profit / Loss</div>
+          <div style="font-size:12px;color:var(--t3)">Collected − Job Costs − Overhead</div>
+        </div>
+        <div style="font-family:Syne,sans-serif;font-size:24px;font-weight:800;color:${netProfit>=0?'var(--green)':'var(--red)'}">${fmt(netProfit)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function remDone(id, e) {
+  e.stopPropagation();
+  DB.reminders.update(id,{done:true});
+  toast('Done ✓');
+  go('dashboard');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CUSTOMERS
+// ══════════════════════════════════════════════════════════════
+let custSearch = '';
+
+function pgCustomers() {
+  document.getElementById('topbar-actions').innerHTML =
+    `<button class="btn btn-primary" onclick="custModal()">${icon('plus')} <span>New Customer</span></button>`;
+  const all = DB.customers.all().filter(c =>
+    !custSearch || c.name.toLowerCase().includes(custSearch.toLowerCase()) || (c.phone||'').includes(custSearch)
+  );
+  document.getElementById('content').innerHTML = `
+    <div class="flex items-center gap8 mb16 wrap">
+      <div class="search-box flex-1" style="max-width:300px">
+        ${icon('search')}<input placeholder="Search name or phone…" value="${custSearch}"
+          oninput="custSearch=this.value;pgCustomers()"/>
+      </div>
+      <span class="c-muted" style="font-size:12px">${all.length} customers</span>
+    </div>
+    <div class="card card-0">
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Name</th><th>Primary Vehicle</th><th>Phone</th><th>Bills</th><th></th></tr></thead>
+        <tbody>
+          ${all.length===0?`<tr class="no-hover"><td colspan="5"><div class="empty"><div class="empty-icon">👥</div><h4>No customers yet</h4><p>Add your first customer</p></div></td></tr>`
+            :all.map(c=>{
+              const bCnt = DB.bills.all().filter(b=>b.customerId===c.id).length;
+              return `<tr onclick="go('cust-detail','${c.id}')">
+                <td class="fw6">${c.name}</td>
+                <td class="c-t2">${(()=>{const v=getVehicles(c)[0];return v?vehicleShort(v):'—';})()}</td>
+                <td class="mono">${c.phone||'—'}</td>
+                <td><span class="badge badge-blue">${bCnt}</span></td>
+                <td onclick="event.stopPropagation()" style="display:flex;gap:5px">
+                  <button class="btn btn-ghost btn-xs btn-icon" onclick="custModal('${c.id}')">${icon('edit')}</button>
+                  <button class="btn btn-danger btn-xs btn-icon" onclick="custDel('${c.id}')">${icon('trash')}</button>
+                  ${c.phone?`<button class="btn btn-wa btn-xs btn-icon" onclick="waShare('${c.phone}','')">${icon('wa')}</button>`:''}
+                </td>
+              </tr>`;
+            }).join('')}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+function renderVehiclesEditor() {
+  const wrap = document.getElementById('vehicles-editor');
+  if(!wrap) return;
+  if(MODAL_VEHICLES.length === 0) MODAL_VEHICLES = [{ id:vuid(), car:'', color:'', reg:'', year:'' }];
+  wrap.innerHTML = MODAL_VEHICLES.map((v,i) => `
+    <div style="background:var(--s3);border:1px solid var(--b2);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px" id="vrow-${v.id}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:0.05em">
+          Vehicle ${i+1}
+        </span>
+        ${MODAL_VEHICLES.length > 1
+          ? `<button type="button" class="btn btn-danger btn-xs" onclick="removeVehicleRow('${v.id}')">
+              ${icon('trash')} Remove
+             </button>`
+          : ''}
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Car Model</label>
+          <input value="${v.car}" oninput="MODAL_VEHICLES.find(x=>x.id==='${v.id}').car=this.value" placeholder="e.g. Honda City ZX"/>
+        </div>
+        <div class="field"><label>Colour</label>
+          <input value="${v.color}" oninput="MODAL_VEHICLES.find(x=>x.id==='${v.id}').color=this.value" placeholder="e.g. Lunar Silver"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Registration No</label>
+          <input value="${v.reg}" oninput="MODAL_VEHICLES.find(x=>x.id==='${v.id}').reg=this.value" placeholder="e.g. MH12AB1234"/>
+        </div>
+        <div class="field"><label>Year</label>
+          <input value="${v.year}" oninput="MODAL_VEHICLES.find(x=>x.id==='${v.id}').year=this.value" placeholder="e.g. 2022"/>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function addVehicleRow() {
+  MODAL_VEHICLES.push({ id:vuid(), car:'', color:'', reg:'', year:'' });
+  renderVehiclesEditor();
+}
+
+function removeVehicleRow(vid) {
+  MODAL_VEHICLES = MODAL_VEHICLES.filter(v => v.id !== vid);
+  renderVehiclesEditor();
+}
+
+function custModal(id) {
+  const ex = id ? DB.customers.find(id) : null;
+  openModal(`
+    <div class="modal-head"><h3>${ex?'Edit':'New'} Customer</h3><button class="x-btn" onclick="closeModal()">${icon('x')}</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-row">
+        <div class="field"><label>Name <span class="req">*</span></label><input id="c-name" value="${ex?.name||''}"/></div>
+        <div class="field"><label>Phone <span class="req">*</span></label><input id="c-phone" type="tel" value="${ex?.phone||''}"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Email</label><input id="c-email" type="email" value="${ex?.email||''}"/></div>
+        <div class="field"><label>Address</label><input id="c-addr" value="${ex?.address||''}"/></div>
+      </div>
+      ${(()=>{
+        const dobDay   = ex?.dob ? ex.dob.slice(0,2) : '';
+        const dobMonth = ex?.dob ? ex.dob.slice(3,5) : '';
+        const dobYear  = ex?.dob ? ex.dob.slice(6,10) : '';
+        const dayOpts  = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31"].map(d=>`<option value="${d}" ${dobDay===d?'selected':''}>${parseInt(d)}</option>`).join('');
+        const moOpts   = [['01','January'],['02','February'],['03','March'],['04','April'],['05','May'],['06','June'],['07','July'],['08','August'],['09','September'],['10','October'],['11','November'],['12','December']].map(([v,l])=>`<option value="${v}" ${dobMonth===v?'selected':''}>${l}</option>`).join('');
+        const yrOpts   = Array.from({length:76},(_,i)=>2015-i).map(y=>`<option value="${y}" ${dobYear===String(y)?'selected':''}>${y}</option>`).join('');
+        return `<div class="field">
+          <label>Date of Birth <span style="font-size:11px;color:var(--t3)">(optional)</span></label>
+          <div style="display:grid;grid-template-columns:80px 1fr 90px;gap:8px">
+            <select id="c-dob-day"><option value="">Day</option>${dayOpts}</select>
+            <select id="c-dob-month"><option value="">Month</option>${moOpts}</select>
+            <select id="c-dob-year"><option value="">Year</option>${yrOpts}</select>
+          </div>
+        </div>`;
+      })()}
+      <hr/>
+      <div class="section-label mb8">Vehicles</div>
+      <div id="vehicles-editor"></div>
+      <button type="button" class="btn btn-ghost btn-sm mt8" onclick="addVehicleRow()">
+        ${icon('plus')} Add Another Vehicle
+      </button>
+      <div class="field"><label>Notes</label><textarea id="c-notes">${ex?.notes||''}</textarea></div>
+      ${!ex ? `
+      <hr/>
+      <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="
+        const sec=document.getElementById('inline-est-sec');
+        const open=sec.style.display!=='none';
+        sec.style.display=open?'none':'block';
+        document.getElementById('inline-est-toggle').textContent=open?'+ Also create an estimate':'− Hide estimate';
+      ">
+        <span id="inline-est-toggle" style="font-size:13px;font-weight:600;color:var(--accent)">+ Also create an estimate</span>
+        <span style="font-size:11px;color:var(--t3)">(optional — skip if not needed now)</span>
+      </div>
+      <div id="inline-est-sec" style="display:none;margin-top:12px">
+        <div class="field" style="margin-bottom:10px">
+          <label>Estimate Notes</label>
+          <input id="c-est-notes" placeholder="e.g. Full ceramic coating package"/>
+        </div>
+        ${liModalSection()}
+      </div>` : ''}
+    </div></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="custSave('${id||''}')">${icon('check')} ${ex?'Save':'Add Customer'}</button>
+    </div>
+  `, 'modal-lg');
+  // Init vehicle editor state from existing customer or fresh
+  MODAL_VEHICLES = ex ? JSON.parse(JSON.stringify(getVehicles(ex))) : [];
+  if(MODAL_VEHICLES.length === 0) MODAL_VEHICLES = [{ id:vuid(), car:'', color:'', reg:'', year:'' }];
+  renderVehiclesEditor();
+  if(!ex) { LI = []; liRender(); }
+}
+
+function custSave(id) {
+  const name=document.getElementById('c-name').value.trim();
+  const phone=document.getElementById('c-phone').value.trim();
+  if(!name){toast('Name is required','err');return;}
+  // Collect vehicles from modal state — filter out fully empty rows
+  const vehicles = MODAL_VEHICLES.filter(v => v.car||v.reg||v.color||v.year)
+    .map(v => ({ id:v.id||vuid(), car:v.car.trim(), color:v.color.trim(), reg:v.reg.trim().toUpperCase(), year:v.year.trim() }));
+  const dobDay   = document.getElementById('c-dob-day')?.value   || '';
+  const dobMonth = document.getElementById('c-dob-month')?.value || '';
+  const dobYear  = document.getElementById('c-dob-year')?.value  || '';
+  let dob = undefined;
+  if(dobDay && dobMonth && dobYear) {
+    dob = `${dobDay}/${dobMonth}/${dobYear}`;
+  } else if(dobDay || dobMonth || dobYear) {
+    toast('Please select Day, Month and Year for Date of Birth','err'); return;
+  }
+  const data={name,phone,email:document.getElementById('c-email').value.trim()||undefined,
+    address:document.getElementById('c-addr').value.trim()||undefined,
+    notes:document.getElementById('c-notes').value.trim()||undefined, dob, vehicles};
+  let cust;
+  if(id){
+    DB.customers.update(id,data);
+    toast('Customer updated');
+    closeModal(); pgCustomers();
+  } else {
+    cust = DB.customers.create(data);
+    // If inline estimate items were added, create the estimate too
+    if(LI.length>0) {
+      const estNotes = document.getElementById('c-est-notes')?.value.trim();
+      const _loc = CFG.shop.locationCode||'';
+    const estNum = 'EST-'+_loc+String(DB.estimates.all().filter(e=>e.number&&e.number.startsWith('EST-'+_loc)).length+1).padStart(3,'0');
+      const expJobCostEl = document.getElementById('e-jobcost');
+      const expectedJobCost = expJobCostEl ? parseFloat(expJobCostEl.value)||undefined : undefined;
+      DB.estimates.create({number:estNum, customerId:cust.id, items:LI, notes:estNotes, status:'draft', expectedJobCost});
+      toast('Customer + estimate created');
+      closeModal();
+      go('customers');
+    } else {
+      toast('Customer added');
+      closeModal(); pgCustomers();
+    }
+  }
+}
+
+function custDel(id) {
+  if(!confirm('Delete this customer?')) return;
+  DB.customers.remove(id); toast('Deleted'); pgCustomers();
+}
+
+function pgCustDetail() {
+  const c = DB.customers.find(DETAIL_ID);
+  if(!c){go('customers');return;}
+  const bills = DB.bills.all().filter(b=>b.customerId===c.id);
+  const ests  = DB.estimates.all().filter(e=>e.customerId===c.id);
+  const rems  = DB.reminders.all().filter(r=>r.customerId===c.id&&!r.done);
+  const totalBilled = bills.reduce((s,b)=>s+b.total,0);
+  const totalPaid   = bills.filter(b=>b.status==='paid').reduce((s,b)=>s+b.total,0);
+
+  document.getElementById('topbar-actions').innerHTML = `
+    <button class="btn btn-ghost btn-sm" onclick="custModal('${c.id}')">${icon('edit')} <span>Edit</span></button>
+    <button class="btn btn-primary btn-sm" onclick="estModal(null,'${c.id}')">${icon('plus')} <span>Estimate</span></button>
+  `;
+  document.getElementById('content').innerHTML = `
+    <button class="btn btn-ghost btn-sm mb16" onclick="go('customers')">${icon('back')} Customers</button>
+    <div class="detail-grid">
+      <!-- LEFT -->
+      <div>
+        <div class="card mb16">
+          <div style="font-family:Syne,sans-serif;font-weight:700;font-size:20px;margin-bottom:2px">${c.name}</div>
+          <div class="c-muted" style="font-size:12px;margin-bottom:16px">Customer since ${fmtD(c.createdAt)}</div>
+          <div class="dl">
+            ${c.phone?`<div class="dl-row"><span class="dl-label">Phone</span><span class="dl-value mono">${c.phone}</span></div>`:''}
+            ${c.email?`<div class="dl-row"><span class="dl-label">Email</span><span class="dl-value">${c.email}</span></div>`:''}
+            ${c.address?`<div class="dl-row"><span class="dl-label">Address</span><span class="dl-value">${c.address}</span></div>`:''}
+            ${c.dob?`<div class="dl-row"><span class="dl-label">Date of Birth</span><span class="dl-value">${c.dob}</span></div>`:''}
+          </div>
+          ${(()=>{ const vvs=getVehicles(c); return vvs.length?`<hr/>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div class="section-label" style="margin:0">Vehicles (${vvs.length})</div>
+              <button class="btn btn-ghost btn-xs" onclick="custModal('${c.id}')">${icon('edit')} Edit</button>
+            </div>
+            ${vvs.map((v,i)=>`
+              <div style="background:var(--s3);border:1px solid var(--b2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px">
+                <div style="font-size:10px;color:var(--t3);font-weight:600;margin-bottom:6px">Vehicle ${i+1}</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                  ${v.car?`<div><div style="font-size:10px;color:var(--t3)">Model</div><div class="fw6">${v.car}</div></div>`:''}
+                  ${v.color?`<div><div style="font-size:10px;color:var(--t3)">Colour</div><div>${v.color}</div></div>`:''}
+                  ${v.reg?`<div><div style="font-size:10px;color:var(--t3)">Reg No</div><div class="mono fw6">${v.reg}</div></div>`:''}
+                  ${v.year?`<div><div style="font-size:10px;color:var(--t3)">Year</div><div>${v.year}</div></div>`:''}
+                </div>
+              </div>`).join('')}`:''})()}
+          ${c.notes?`<hr/><div class="c-t2" style="font-size:13px">${c.notes}</div>`:''}
+          <hr/>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div><div class="section-label">Total Billed</div><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:var(--accent)">${fmt(totalBilled)}</div></div>
+            <div><div class="section-label">Total Paid</div><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:var(--green)">${fmt(totalPaid)}</div></div>
+          </div>
+          ${c.phone?`<hr/><div class="flex gap8">
+            <button class="btn btn-wa flex-1" onclick="waShare('${c.phone}','')">${icon('wa')} WhatsApp</button>
+          </div>`:''}
+        </div>
+        ${rems.length?`<div class="card">
+          <div class="card-title mb12">Pending Reminders</div>
+          ${rems.map(r=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--b1)">
+            <button class="btn btn-success btn-xs" onclick="remDone2('${r.id}')">${icon('check')}</button>
+            <div><div style="font-size:13px">${r.note}</div>${r.dueDate?`<div style="font-size:11px;color:var(--amber)">Due ${fmtD(r.dueDate)}</div>`:''}</div>
+          </div>`).join('')}
+        </div>`:''}
+      </div>
+      <!-- RIGHT -->
+      <div>
+        <div class="card card-0 mb16">
+          <div class="card-header" style="padding:16px 18px 0"><span class="card-title">Bills (${bills.length})</span></div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Number</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody>
+              ${bills.slice().reverse().map(b=>`<tr onclick="go('bill-detail','${b.id}')">
+                <td class="mono c-accent">${b.number}</td><td>${fmtD(b.createdAt)}</td>
+                <td class="mono">${fmt(b.total)}</td>
+                <td><span class="badge ${b.status==='paid'?'badge-green':'badge-red'}">${b.status}</span></td>
+              </tr>`).join('')||`<tr class="no-hover"><td colspan="4" style="text-align:center;color:var(--t3);padding:20px">No bills yet</td></tr>`}
+            </tbody>
+          </table></div>
+        </div>
+        <div class="card card-0">
+          <div class="card-header" style="padding:16px 18px 0">
+            <span class="card-title">Estimates (${ests.length})</span>
+            <button class="btn btn-ghost btn-sm" onclick="estModal(null,'${c.id}')">${icon('plus')} New</button>
+          </div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Number</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody>
+              ${ests.slice().reverse().map(e=>`<tr onclick="go('est-detail','${e.id}')">
+                <td class="mono c-accent">${e.number}</td><td>${fmtD(e.createdAt)}</td>
+                <td class="mono">${fmt(lineTotal(e.items))}</td>
+                <td><span class="badge ${e.status==='converted'?'badge-green':e.status==='cancelled'?'badge-red':'badge-amber'}">${e.status}</span></td>
+              </tr>`).join('')||`<tr class="no-hover"><td colspan="4" style="text-align:center;color:var(--t3);padding:20px">No estimates yet</td></tr>`}
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function remDone2(id){DB.reminders.update(id,{done:true});toast('Done ✓');pgCustDetail();}
+
+// ══════════════════════════════════════════════════════════════
+//  ESTIMATES
+// ══════════════════════════════════════════════════════════════
+function pgEstimates() {
+  document.getElementById('topbar-actions').innerHTML =
+    `<button class="btn btn-primary" onclick="estModal()">${icon('plus')} <span>New Estimate</span></button>`;
+  const all = DB.estimates.all().slice().reverse();
+  document.getElementById('content').innerHTML = `
+    <div class="card card-0">
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Number</th><th>Customer</th><th>Date</th><th>Amount</th>${CFG.jobCostTracking?'<th>Exp. Margin</th>':''}<th>Status</th></tr></thead>
+        <tbody>
+          ${all.length===0?`<tr class="no-hover"><td colspan="5"><div class="empty"><div class="empty-icon">📄</div><h4>No estimates yet</h4></div></td></tr>`
+            :all.map(e=>{const c=DB.customers.find(e.customerId);
+              const eTotal=lineTotal(e.items);
+              const eMargin=e.expectedJobCost?eTotal-e.expectedJobCost:null;
+              return`<tr onclick="go('est-detail','${e.id}')">
+              <td class="mono c-accent">${e.number}</td>
+              <td class="fw6">${c?c.name:'—'}</td>
+              <td>${fmtD(e.createdAt)}</td>
+              <td class="mono">${fmt(eTotal)}</td>
+              ${CFG.jobCostTracking?`<td class="mono ${eMargin!==null?(eMargin>=0?'c-green':'c-red'):'c-muted'}">${eMargin!==null?fmt(eMargin)+'  ('+Math.round(eMargin/eTotal*100)+'%)':'—'}</td>`:''}
+              <td><span class="badge ${e.status==='converted'?'badge-green':e.status==='cancelled'?'badge-red':'badge-amber'}">${e.status}</span></td>
+            </tr>`;}).join('')}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+function liModalSection() {
+  return `
+    <div class="section-label">Quick Add</div>
+    <div class="quick-tags mb12">${CFG.products.map(p=>`<button type="button" class="qtag" onclick="liPreset('${p.name}',${p.price})">${p.name} — ${fmt(p.price)}</button>`).join('')}</div>
+    <div class="section-label">Line Items ${CFG.jobCostTracking?'(with Job Cost)':''}</div>
+    <div id="li-wrap" class="mb8"></div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;align-items:end;margin-bottom:8px">
+      <input id="li-desc" placeholder="Description" onkeydown="if(event.key==='Enter')liAdd()"/>
+      <input id="li-qty" type="number" value="1" min="1" placeholder="Qty"/>
+      <input id="li-price" type="number" placeholder="${CFG.currency}Price" onkeydown="if(event.key==='Enter')liAdd()"/>
+      <button class="btn btn-ghost" onclick="liAdd()">${icon('plus')}</button>
+    </div>
+    <div class="li-total-row" id="li-total">Total: <span class="c-accent">${CFG.currency}0</span></div>
+    ${CFG.jobCostTracking?`<div class="li-margin" id="li-margin"></div>`:''}
+  `;
+}
+
+function estModal(id, presetCust) {
+  const ex = id ? DB.estimates.find(id) : null;
+  LI = ex ? JSON.parse(JSON.stringify(ex.items||[])) : [];
+  const custs = DB.customers.all();
+  const jobCostSection = CFG.jobCostTracking ? `
+    <div style="background:var(--s3);border:1px solid var(--b2);border-radius:var(--radius-sm);padding:14px 16px">
+      <div class="section-label mb8">Job Cost Estimate</div>
+      <div class="form-row">
+        <div class="field">
+          <label>Expected Cost (chemicals, products, labour out)</label>
+          <div class="input-prefix"><span>${CFG.currency}</span>
+            <input id="e-jobcost" type="number" placeholder="0" value="${ex?.expectedJobCost||''}"/>
+          </div>
+        </div>
+        <div class="field" style="justify-content:flex-end">
+          <div id="e-margin-preview" style="text-align:right;padding-top:8px"></div>
+        </div>
+      </div>
+    </div>` : '';
+  openModal(`
+    <div class="modal-head"><h3>${ex?'Edit':'New'} Estimate</h3><button class="x-btn" onclick="closeModal()">${icon('x')}</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-row">
+        <div class="field"><label>Customer <span class="req">*</span></label>
+          <select id="e-cust" onchange="populateVehicleDropdown('e-cust','e-vehicle')">
+            <option value="">Select…</option>
+            ${custs.map(c=>`<option value="${c.id}" ${(ex?.customerId||presetCust)===c.id?'selected':''}>${c.name} ${(()=>{const v=getVehicles(c)[0];return v?'— '+vehicleShort(v):'';})()}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Vehicle</label>
+          <select id="e-vehicle">
+            <option value="">Select customer first…</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Notes</label><input id="e-notes" value="${ex?.notes||''}" placeholder="e.g. Full ceramic — BMW"/></div>
+      <hr/>${liModalSection()}
+      ${jobCostSection}
+    </div></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="estSave('${id||''}')">${icon('check')} ${ex?'Save':'Create Estimate'}</button>
+    </div>
+  `,'modal-lg');
+  liRender();
+  // Pre-populate vehicle dropdown if customer already selected
+  const preCustId = (id ? DB.estimates.find(id)?.customerId : null) || presetCust;
+  if(preCustId) populateVehicleDropdown('e-cust','e-vehicle', id ? DB.estimates.find(id)?.vehicleId : null);
+  // Wire up live margin preview
+  if(CFG.jobCostTracking) {
+    const costInput = document.getElementById('e-jobcost');
+    if(costInput) costInput.addEventListener('input', updateEstMarginPreview);
+    updateEstMarginPreview();
+  }
+}
+
+function updateEstMarginPreview() {
+  const preview = document.getElementById('e-margin-preview');
+  if(!preview) return;
+  const total = LI.reduce((s,i)=>s+(i.qty*i.price),0);
+  const cost  = parseFloat(document.getElementById('e-jobcost')?.value) || 0;
+  if(!total && !cost){ preview.innerHTML=''; return; }
+  const margin = total - cost;
+  const pct = total>0 ? Math.round(margin/total*100) : 0;
+  preview.innerHTML = cost>0
+    ? `<div class="section-label">Margin Preview</div>
+       <div style="font-family:Syne,sans-serif;font-weight:700;font-size:18px;color:${margin>=0?'var(--green)':'var(--red)'}">
+         ${fmt(margin)} <span style="font-size:12px;font-weight:500">(${pct}%)</span>
+       </div>`
+    : '';
+}
+
+function estSave(id) {
+  const custId = document.getElementById('e-cust').value;
+  if(!custId){toast('Select a customer','err');return;}
+  if(LI.length===0){toast('Add at least one item','err');return;}
+  const jobCostEl = document.getElementById('e-jobcost');
+  const expectedJobCost = jobCostEl ? parseFloat(jobCostEl.value)||undefined : undefined;
+  const vehicleId = document.getElementById('e-vehicle')?.value||undefined;
+  const data={customerId:custId,items:LI,notes:document.getElementById('e-notes').value.trim(),expectedJobCost,vehicleId};
+  if(id){DB.estimates.update(id,data);toast('Estimate updated');}
+  else{
+    const _cloc2 = CFG.shop.locationCode||'';
+    const num = 'EST-'+_cloc2+String(DB.estimates.all().filter(e=>e.number&&e.number.startsWith('EST-'+_cloc2)).length+1).padStart(3,'0');
+    DB.estimates.create({...data,number:num,status:'draft'});
+    toast('Estimate created');
+  }
+  closeModal(); pgEstimates();
+}
+
+// ── Estimate inline edit helpers ──
+function estInlineQty(id, idx, delta) {
+  const est = DB.estimates.find(id);
+  if(!est || est.status !== 'draft') return;
+  const items = JSON.parse(JSON.stringify(est.items));
+  items[idx].qty = Math.max(1, (items[idx].qty||1) + delta);
+  DB.estimates.update(id, {items});
+  pgEstDetail();
+}
+
+function estInlineEditQty(el, id, idx) {
+  const est = DB.estimates.find(id);
+  if(!est || est.status !== 'draft') return;
+  const cur = est.items[idx].qty;
+  const input = document.createElement('input');
+  input.type = 'number'; input.min = '1';
+  input.value = cur;
+  input.style.cssText = 'width:44px;padding:2px 4px;font-size:13px;text-align:center;background:var(--s3);border:1px solid var(--accent);border-radius:4px;color:var(--t1)';
+  el.replaceWith(input);
+  input.focus(); input.select();
+  const save = () => {
+    const v = parseInt(input.value) || 1;
+    const items = JSON.parse(JSON.stringify(est.items));
+    items[idx].qty = Math.max(1, v);
+    DB.estimates.update(id, {items});
+    pgEstDetail();
+  };
+  input.addEventListener('blur', save);
+  input.addEventListener('keydown', e => { if(e.key==='Enter') save(); if(e.key==='Escape') pgEstDetail(); });
+}
+
+function estInlineEditPrice(el, id, idx) {
+  const est = DB.estimates.find(id);
+  if(!est || est.status !== 'draft') return;
+  const cur = est.items[idx].price;
+  const input = document.createElement('input');
+  input.type = 'number'; input.min = '0';
+  input.value = cur;
+  input.style.cssText = 'width:80px;padding:2px 6px;font-size:13px;background:var(--s3);border:1px solid var(--accent);border-radius:4px;color:var(--t1)';
+  el.replaceWith(input);
+  input.focus(); input.select();
+  const save = () => {
+    const v = parseFloat(input.value) || 0;
+    const items = JSON.parse(JSON.stringify(est.items));
+    items[idx].price = v;
+    DB.estimates.update(id, {items});
+    pgEstDetail();
+  };
+  input.addEventListener('blur', save);
+  input.addEventListener('keydown', e => { if(e.key==='Enter') save(); if(e.key==='Escape') pgEstDetail(); });
+}
+
+function estInlineRemove(id, idx) {
+  const est = DB.estimates.find(id);
+  if(!est || est.status !== 'draft') return;
+  if(est.items.length <= 1) { toast('Estimate must have at least one item','err'); return; }
+  const items = est.items.filter((_,i) => i !== idx);
+  DB.estimates.update(id, {items});
+  toast('Item removed');
+  pgEstDetail();
+}
+
+function pgEstDetail() {
+  const e = DB.estimates.find(DETAIL_ID);
+  if(!e){go('estimates');return;}
+  const c = DB.customers.find(e.customerId);
+  const total = lineTotal(e.items);
+  document.getElementById('topbar-actions').innerHTML = `
+    ${e.status==='draft' ? `
+      <button class="btn btn-ghost btn-sm" onclick="estModal('${e.id}')">${icon('plus')} <span>Add Items</span></button>
+      <button class="btn btn-primary btn-sm" onclick="estConvert('${e.id}')">${icon('convert')} <span>Convert to Bill</span></button>
+    ` : `
+      <span class="badge ${e.status==='converted'?'badge-green':'badge-red'}" style="padding:7px 14px;font-size:12px">
+        ${e.status==='converted'?'✓ Converted to Bill':'Cancelled'}
+      </span>
+    `}
+    ${c?.phone?`<button class="btn btn-wa btn-sm" onclick="waShareDoc('estimates','${e.id}')">${icon('wa')} <span>Share</span></button>`:''}
+    <button class="btn btn-ghost btn-sm" onclick="printDoc('estimate',DB.estimates.find('${e.id}'))">${icon('print')} <span>Print</span></button>
+    ${e.status==='draft'?`<button class="btn btn-danger btn-sm" onclick="estDel('${e.id}')">${icon('trash')}</button>`:''}
+  `;
+  document.getElementById('content').innerHTML = `
+    <button class="btn btn-ghost btn-sm mb16" onclick="go('estimates')">${icon('back')} Estimates</button>
+    <div class="card">
+      <div class="flex justify-between items-center mb16">
+        <div>
+          <div style="font-family:Syne,sans-serif;font-weight:700;font-size:22px;color:var(--accent)">${e.number}</div>
+          <div class="c-muted" style="font-size:12px">Created ${fmtD(e.createdAt)}</div>
+        </div>
+        <span class="badge ${e.status==='converted'?'badge-green':e.status==='cancelled'?'badge-red':'badge-amber'}" style="font-size:13px;padding:6px 16px">${e.status}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div><div class="section-label">Customer</div><div class="fw6">${c?c.name:'—'}</div>${c?.phone?`<div class="mono c-muted" style="font-size:12px">${c.phone}</div>`:''}</div>
+        ${(()=>{ const v=e.vehicleId?getVehicles(c).find(x=>x.id===e.vehicleId):getVehicles(c)[0]; return v?`<div><div class="section-label">Vehicle</div><div class="fw6">${v.car||'—'}</div><div class="mono c-muted" style="font-size:12px">${[v.color,v.reg].filter(Boolean).join(' · ')}</div></div>`:''})()}
+        ${e.notes?`<div><div class="section-label">Notes</div><div class="c-t2">${e.notes}</div></div>`:''}
+      </div>
+      <hr/>
+      ${e.status==='draft' ? `
+        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;letter-spacing:0.04em">
+          ✏️ Click any price or quantity to edit directly
+        </div>
+        <table class="li-table" style="margin-bottom:4px" id="est-inline-table">
+          <thead><tr>
+            <th style="width:42%">Description</th>
+            <th style="width:18%">Qty</th>
+            <th style="width:22%">Price</th>
+            <th style="width:14%;text-align:right">Amount</th>
+            <th style="width:4%"></th>
+          </tr></thead>
+          <tbody>
+            ${e.items.map((item,idx)=>`<tr class="no-hover" id="est-row-${idx}">
+              <td style="font-weight:500;color:var(--t1)">${item.desc}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:4px">
+                  <button class="btn btn-ghost btn-xs" style="padding:2px 6px;font-size:14px;line-height:1"
+                    onclick="estInlineQty('${e.id}',${idx},-1)">−</button>
+                  <span class="mono" style="min-width:24px;text-align:center;cursor:pointer"
+                    onclick="estInlineEditQty(this,'${e.id}',${idx})">${item.qty}</span>
+                  <button class="btn btn-ghost btn-xs" style="padding:2px 6px;font-size:14px;line-height:1"
+                    onclick="estInlineQty('${e.id}',${idx},1)">+</button>
+                </div>
+              </td>
+              <td>
+                <span class="mono" style="cursor:pointer;border-bottom:1px dashed var(--b2);padding-bottom:1px"
+                  onclick="estInlineEditPrice(this,'${e.id}',${idx})">${fmt(item.price)}</span>
+              </td>
+              <td class="mono" style="text-align:right;color:var(--accent)" id="est-amt-${idx}">${fmt(item.qty*item.price)}</td>
+              <td>
+                <button class="btn btn-danger btn-xs btn-icon" style="opacity:0.6"
+                  onclick="estInlineRemove('${e.id}',${idx})" title="Remove">${icon('trash')}</button>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="text-align:right;font-family:Syne,sans-serif;font-weight:700;font-size:22px;color:var(--accent);margin-top:8px" id="est-inline-total">
+          Total: ${fmt(total)}
+        </div>
+      ` : `
+        <table class="li-table" style="margin-bottom:12px">
+          <thead><tr><th>Description</th><th>Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Amount</th></tr></thead>
+          <tbody>${e.items.map(i=>`<tr class="no-hover"><td>${i.desc}</td><td>${i.qty}</td><td class="mono" style="text-align:right">${fmt(i.price)}</td><td class="mono" style="text-align:right">${fmt(i.qty*i.price)}</td></tr>`).join('')}</tbody>
+        </table>
+        <div style="text-align:right;font-family:Syne,sans-serif;font-weight:700;font-size:22px;color:var(--accent)">Total: ${fmt(total)}</div>
+      `}
+      ${CFG.jobCostTracking && e.expectedJobCost ? `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;background:var(--s3);border:1px solid var(--b2);border-radius:var(--radius-sm);padding:14px 18px;margin-top:16px">
+          <div><div class="section-label">Quote Value</div><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:var(--accent)">${fmt(total)}</div></div>
+          <div><div class="section-label">Expected Cost</div><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:var(--red)">${fmt(e.expectedJobCost)}</div></div>
+          <div><div class="section-label">Expected Margin</div>
+            <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:${total-e.expectedJobCost>=0?'var(--green)':'var(--red)'}">
+              ${fmt(total-e.expectedJobCost)} <span style="font-size:12px">(${total>0?Math.round((total-e.expectedJobCost)/total*100):0}%)</span>
+            </div>
+          </div>
+        </div>` : ''}
+      ${c?.phone?`<hr/><div class="flex gap8 wrap">
+        <button class="btn btn-wa" onclick="waShareDoc('estimates','${e.id}')">${icon('wa')} Send on WhatsApp</button>
+        <button class="btn btn-ghost" onclick="markShared('estimates','${e.id}');copyText(buildEstimateText(DB.estimates.find('${e.id}')))">${icon('copy')} Copy Text</button>
+        <button class="btn btn-ghost" onclick="printDoc('estimate',DB.estimates.find('${e.id}'))">${icon('print')} Print / PDF</button>
+        ${e.status==='draft'?`<button class="btn btn-primary" onclick="estConvert('${e.id}')">${icon('convert')} Convert to Bill</button>`:''}
+      </div>`:''}
+    </div>
+  `;
+}
+
+function estConvert(id) {
+  const e = DB.estimates.find(id);
+  const loc = CFG.shop.locationCode||'';
+  const num = 'BILL-'+loc+String(DB.bills.all().filter(b=>b.number&&b.number.startsWith('BILL-'+loc)).length+1).padStart(3,'0');
+  // Carry expected job cost from estimate → bill as the starting job cost value
+  const bill = DB.bills.create({
+    number:num, customerId:e.customerId, estimateId:id,
+    items:e.items, total:lineTotal(e.items), notes:e.notes, status:'unpaid',
+    jobCost: e.expectedJobCost || undefined,
+    vehicleId: e.vehicleId || undefined,  // carry vehicle through from estimate
+  });
+  DB.estimates.update(id,{status:'converted'});
+  toast('Converted to '+bill.number+(e.expectedJobCost?' — job cost carried over':''));
+  go('bill-detail',bill.id);
+}
+
+function estDel(id){if(!confirm('Delete estimate?'))return;DB.estimates.remove(id);toast('Deleted');go('estimates');}
+
+// ══════════════════════════════════════════════════════════════
+//  BILLS
+// ══════════════════════════════════════════════════════════════
+function pgBills() {
+  document.getElementById('topbar-actions').innerHTML =
+    `<button class="btn btn-primary" onclick="billModal()">${icon('plus')} <span>New Bill</span></button>`;
+  const all = DB.bills.all().slice().reverse();
+  const unpaidTotal = all.filter(b=>b.status==='unpaid').reduce((s,b)=>s+b.total,0);
+  document.getElementById('content').innerHTML = `
+    ${unpaidTotal>0?`<div style="background:var(--red-bg);border:1px solid rgba(255,92,106,0.2);border-radius:var(--radius);padding:12px 18px;margin-bottom:14px;font-size:13px;color:var(--red)">
+      <strong>${fmt(unpaidTotal)}</strong> outstanding · ${all.filter(b=>b.status==='unpaid').length} unpaid bills
+    </div>`:''}
+    <div class="card card-0"><div class="tbl-wrap"><table>
+      <thead><tr><th>Number</th><th>Customer</th><th>Date</th><th>Amount</th>${CFG.jobCostTracking?'<th>Margin</th>':''}<th>Status</th></tr></thead>
+      <tbody>
+        ${all.length===0?`<tr class="no-hover"><td colspan="6"><div class="empty"><div class="empty-icon">🧾</div><h4>No bills yet</h4></div></td></tr>`
+          :all.map(b=>{const c=DB.customers.find(b.customerId);
+            const margin = CFG.jobCostTracking&&b.jobCost ? b.total-b.jobCost : null;
+            return`<tr onclick="go('bill-detail','${b.id}')">
+              <td class="mono c-accent">${b.number}</td>
+              <td class="fw6">${c?c.name:'—'}</td>
+              <td>${fmtD(b.createdAt)}</td>
+              <td class="mono fw6">${fmt(b.total)}</td>
+              ${CFG.jobCostTracking?`<td class="mono ${margin!==null?(margin>=0?'c-green':'c-red'):'c-muted'}">${margin!==null?fmt(margin):'—'}</td>`:''}
+              <td><span class="badge ${b.status==='paid'?'badge-green':'badge-red'}">${b.status}</span></td>
+            </tr>`;}).join('')}
+      </tbody>
+    </table></div></div>
+  `;
+}
+
+function billModal(id, presetCust) {
+  const ex = id ? DB.bills.find(id) : null;
+  LI = ex ? JSON.parse(JSON.stringify(ex.items||[])) : [];
+  const custs = DB.customers.all();
+  const svcOpts = CFG.serviceReminder ? `
+    <div class="field"><label>Next Service Due In</label>
+      <select id="b-svc"><option value="">No reminder</option>
+        <option value="1">1 month</option><option value="2">2 months</option>
+        <option value="3">3 months</option><option value="6">6 months</option>
+        <option value="12">12 months</option>
+      </select>
+    </div>` : '';
+  const jobCostOpts = CFG.jobCostTracking ? `
+    <div class="field"><label>Total Job Cost (materials + labour out)</label>
+      <div class="input-prefix"><span>${CFG.currency}</span><input id="b-jobcost" type="number" placeholder="0" value="${ex?.jobCost||''}"/></div>
+    </div>` : '';
+
+  openModal(`
+    <div class="modal-head"><h3>${ex?'Edit':'New'} Bill</h3><button class="x-btn" onclick="closeModal()">${icon('x')}</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-row">
+        <div class="field"><label>Customer <span class="req">*</span></label>
+          <select id="b-cust" onchange="populateVehicleDropdown('b-cust','b-vehicle')">
+            <option value="">Select…</option>
+            ${custs.map(c=>`<option value="${c.id}" ${(ex?.customerId||presetCust)===c.id?'selected':''}>${c.name} ${(()=>{const v=getVehicles(c)[0];return v?'— '+vehicleShort(v):'';})()}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Vehicle</label>
+          <select id="b-vehicle">
+            <option value="">Select customer first…</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Notes</label><input id="b-notes" value="${ex?.notes||''}" placeholder="Optional"/></div>
+      ${svcOpts||jobCostOpts?`<div class="form-row">${svcOpts}${jobCostOpts}</div>`:''}
+      <hr/>${liModalSection()}
+    </div></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="billSave('${id||''}')">${icon('check')} ${ex?'Save':'Create Bill'}</button>
+    </div>
+  `,'modal-lg');
+  liRender();
+  const preBillCustId = (id ? DB.bills.find(id)?.customerId : null) || presetCust;
+  if(preBillCustId) populateVehicleDropdown('b-cust','b-vehicle', id ? DB.bills.find(id)?.vehicleId : null);
+}
+
+function billSave(id) {
+  const custId = document.getElementById('b-cust').value;
+  if(!custId){toast('Select a customer','err');return;}
+  if(LI.length===0){toast('Add at least one item','err');return;}
+  const total = LI.reduce((s,i)=>s+(i.qty*i.price),0);
+  const svcEl = document.getElementById('b-svc');
+  const svcMonths = svcEl ? parseInt(svcEl.value)||0 : 0;
+  const nextServiceDate = svcMonths ? addMonths(today(), svcMonths) : undefined;
+  const jobCostEl = document.getElementById('b-jobcost');
+  const jobCost = jobCostEl ? parseFloat(jobCostEl.value)||undefined : undefined;
+  const vehicleId = document.getElementById('b-vehicle')?.value||undefined;
+  const data={customerId:custId,items:LI,total,notes:document.getElementById('b-notes').value.trim(),jobCost,nextServiceDate,vehicleId};
+  let bill;
+  if(id){bill=DB.bills.update(id,data);toast('Bill updated');}
+  else{
+    const _bloc = CFG.shop.locationCode||'';
+    const num = 'BILL-'+_bloc+String(DB.bills.all().filter(b=>b.number&&b.number.startsWith('BILL-'+_bloc)).length+1).padStart(3,'0');
+    bill=DB.bills.create({...data,number:num,status:'unpaid'});
+    // Auto-create service reminder
+    if(nextServiceDate){
+      const _svcCust = DB.customers.find(custId);
+      const _svcVeh  = vehicleId ? getVehicles(_svcCust).find(v=>v.id===vehicleId) : getVehicles(_svcCust)[0];
+      const _svcNote = `Service due — ${_svcCust?.name||'customer'}${_svcVeh?.reg?' ('+_svcVeh.reg+')':''}`;
+      DB.reminders.create({customerId:custId,vehicleId,note:_svcNote,dueDate:nextServiceDate,isServiceReminder:true});
+      toast('Bill created + service reminder set');
+    } else toast('Bill created');
+  }
+  closeModal();
+  if(bill) go('bill-detail', bill.id||id);
+}
+
+function pgBillDetail() {
+  const b = DB.bills.find(DETAIL_ID);
+  if(!b){go('bills');return;}
+  const c = DB.customers.find(b.customerId);
+  const margin = CFG.jobCostTracking && b.jobCost ? b.total - b.jobCost : null;
+  const marginPct = margin!==null && b.total>0 ? Math.round(margin/b.total*100) : null;
+  document.getElementById('topbar-actions').innerHTML = `
+    ${b.status==='unpaid'?`<button class="btn btn-success btn-sm" onclick="markPaid('${b.id}')">${icon('check')} Mark Paid</button>`:`<span class="badge badge-green" style="padding:7px 14px;font-size:12px">✓ Paid ${b.paidAt?fmtD(b.paidAt):''}</span>`}
+    ${c?.phone?`<button class="btn btn-wa btn-sm" onclick="waShareDoc('bills','${b.id}')">${icon('wa')} <span>Share</span></button>`:''}
+    <button class="btn btn-ghost btn-sm" onclick="printDoc('bill',DB.bills.find('${b.id}'))">${icon('print')} <span>Print</span></button>
+    <button class="btn btn-ghost btn-sm" onclick="billModal('${b.id}')">${icon('edit')}</button>
+    <button class="btn btn-danger btn-sm" onclick="billDel('${b.id}')">${icon('trash')}</button>
+  `;
+  document.getElementById('content').innerHTML = `
+    <button class="btn btn-ghost btn-sm mb16" onclick="go('bills')">${icon('back')} Bills</button>
+    <div class="card">
+      <div class="flex justify-between items-center mb16">
+        <div>
+          <div style="font-family:Syne,sans-serif;font-weight:700;font-size:22px;color:var(--accent)">${b.number}</div>
+          <div class="c-muted" style="font-size:12px">Created ${fmtD(b.createdAt)}</div>
+        </div>
+        <span class="badge ${b.status==='paid'?'badge-green':'badge-red'}" style="font-size:13px;padding:6px 16px">${b.status}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:16px">
+        <div><div class="section-label">Customer</div><div class="fw6">${c?c.name:'—'}</div>${c?.phone?`<div class="mono c-muted" style="font-size:12px">${c.phone}</div>`:''}</div>
+        ${(()=>{ const vvs=getVehicles(c); const v=b.vehicleId?vvs.find(x=>x.id===b.vehicleId):vvs[0]; return v?`<div><div class="section-label">Vehicle</div><div class="fw6">${v.car||'—'}</div><div class="mono c-muted" style="font-size:12px">${[v.color,v.reg].filter(Boolean).join(' · ')}</div></div>`:''})()}
+        ${b.nextServiceDate?`<div><div class="section-label">Next Service Due</div><div class="c-amber fw6">${fmtD(b.nextServiceDate)}</div></div>`:''}
+        ${b.notes?`<div><div class="section-label">Notes</div><div class="c-t2">${b.notes}</div></div>`:''}
+        ${b.estimateId?`<div><div class="section-label">From Estimate</div><div class="mono c-accent" onclick="go('est-detail','${b.estimateId}')" style="cursor:pointer">${DB.estimates.find(b.estimateId)?.number||'—'}</div></div>`:''}
+      </div>
+      ${CFG.jobCostTracking&&(b.jobCost||margin!==null)?`
+        <div style="background:var(--s3);border:1px solid var(--b2);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+          <div><div class="section-label">Revenue</div><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:var(--green)">${fmt(b.total)}</div></div>
+          <div><div class="section-label">Job Cost</div><div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:var(--red)">${fmt(b.jobCost)}</div></div>
+          <div><div class="section-label">Margin</div>
+            <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;color:${margin>=0?'var(--green)':'var(--red)'}">${fmt(margin)} <span style="font-size:13px">(${marginPct}%)</span></div>
+          </div>
+        </div>`:''}
+      <hr/>
+      <table class="li-table" style="margin-bottom:12px">
+        <thead><tr><th>Description</th><th>Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Amount</th></tr></thead>
+        <tbody>${b.items.map(i=>`<tr class="no-hover"><td>${i.desc}</td><td>${i.qty}</td><td class="mono" style="text-align:right">${fmt(i.price)}</td><td class="mono" style="text-align:right">${fmt(i.qty*i.price)}</td></tr>`).join('')}</tbody>
+      </table>
+      <div style="text-align:right;font-family:Syne,sans-serif;font-weight:700;font-size:22px;color:var(--accent)">Total: ${fmt(b.total)}</div>
+      <hr/>
+      <div class="flex gap8 wrap">
+        ${c?.phone?`<button class="btn btn-wa" onclick="waShareDoc('bills','${b.id}')">${icon('wa')} Send on WhatsApp</button>`:''}
+        <button class="btn btn-ghost" onclick="markShared('bills','${b.id}');copyText(buildBillText(DB.bills.find('${b.id}')))">${icon('copy')} Copy Text</button>
+        <button class="btn btn-ghost" onclick="printDoc('bill',DB.bills.find('${b.id}'))">${icon('print')} Print / PDF</button>
+        ${b.status==='unpaid'?`<button class="btn btn-success" onclick="markPaid('${b.id}')">${icon('check')} Mark Paid</button>`:''}
+        ${c?`<button class="btn btn-ghost" onclick="openReminderModal('${c.id}','${b.id}')">${icon('bell')} Add Reminder</button>`:''}
+      </div>
+    </div>
+  `;
+}
+
+function markPaid(id) {
+  const bill = DB.bills.find(id);
+  if(CFG.jobCostTracking && !bill.jobCost) {
+    // Job cost missing — show a quick inline prompt before marking paid
+    openModal(`
+      <div class="modal-head"><h3>Mark as Paid</h3><button class="x-btn" onclick="closeModal()">${icon('x')}</button></div>
+      <div class="modal-body">
+        <div style="font-size:13px;color:var(--t2);margin-bottom:16px">
+          Bill <strong class="c-accent">${bill.number}</strong> — ${fmt(bill.total)}<br/>
+          <span class="c-muted">No job cost entered for this bill.</span>
+        </div>
+        <div class="field">
+          <label>Job Cost (chemicals, products used) — optional</label>
+          <div class="input-prefix"><span>${CFG.currency}</span>
+            <input id="mp-jobcost" type="number" placeholder="0" autofocus/>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--t3);margin-top:8px">
+          Leave blank to skip. You can always edit the bill later to add the cost.
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-ghost" onclick="confirmMarkPaid('${id}',0)">Skip & Mark Paid</button>
+        <button class="btn btn-primary" onclick="confirmMarkPaid('${id}',parseFloat(document.getElementById('mp-jobcost').value)||0)">${icon('check')} Confirm Paid</button>
+      </div>
+    `);
+  } else {
+    confirmMarkPaid(id, null);
+  }
+}
+
+function confirmMarkPaid(id, jobCost) {
+  const updates = {status:'paid', paidAt:now()};
+  if(jobCost) updates.jobCost = jobCost;
+  DB.bills.update(id, updates);
+  // Auto-close any pending reminders linked to this bill
+  const linked = DB.reminders.all().filter(r => r.billId === id && !r.done);
+  linked.forEach(r => DB.reminders.update(r.id, {done:true}));
+  closeModal();
+  if(linked.length > 0) {
+    toast(`Paid ✓ — ${linked.length} payment reminder${linked.length>1?'s':''} auto-closed`);
+  } else {
+    toast('Marked as paid ✓');
+  }
+  go('bill-detail', id);
+}
+function billDel(id){if(!confirm('Delete bill?'))return;DB.bills.remove(id);toast('Deleted');go('bills');}
+
+// ══════════════════════════════════════════════════════════════
+//  REMINDERS
+// ══════════════════════════════════════════════════════════════
+function pgReminders() {
+  document.getElementById('topbar-actions').innerHTML =
+    `<button class="btn btn-primary" onclick="openReminderModal()">${icon('plus')} <span>New Reminder</span></button>`;
+  const all  = DB.reminders.all();
+  const pending = all.filter(r=>!r.done);
+  const done    = all.filter(r=>r.done);
+
+  // Service due alerts
+  const svcDue = CFG.serviceReminder ? DB.bills.all().filter(b=>{
+    if(!b.nextServiceDate) return false;
+    return (new Date(b.nextServiceDate)-new Date())/86400000 <= 30;
+  }).map(b=>({b,c:DB.customers.find(b.customerId),overdue:new Date(b.nextServiceDate)<new Date()})) : [];
+
+  document.getElementById('content').innerHTML = `
+    ${svcDue.length?`
+      <div class="card mb16" style="border-color:rgba(255,92,106,0.25)">
+        <div class="card-title mb12" style="color:var(--red)">${icon('warn')} Service Due Alerts</div>
+        ${svcDue.map(({b,c,overdue})=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--b1)">
+            <div style="flex:1;min-width:0">
+              <div class="fw6">${c?c.name:'Unknown'}</div>
+              <div class="c-muted" style="font-size:12px">${(()=>{ const vvs=getVehicles(c); const v=b.vehicleId?vvs.find(x=>x.id===b.vehicleId):vvs[0]; return v?[v.car,v.reg].filter(Boolean).join(' · '):''; })()}</div>
+              <div style="font-size:12px;color:${overdue?'var(--red)':'var(--amber)'}">
+                ${overdue?'⚠ OVERDUE':'Due'}: ${fmtD(b.nextServiceDate)}
+              </div>
+            </div>
+            ${c?.phone?`<button class="btn btn-wa btn-sm" onclick="waShare('${c.phone}',buildServiceReminderText(DB.customers.find('${c.id}'),DB.bills.find('${b.id}')))">${icon('wa')} Remind</button>`:''}
+          </div>
+        `).join('')}
+      </div>`:''}
+
+    <div class="mb16">
+      <div class="flex justify-between items-center mb12">
+        <div class="card-title">Pending (${pending.length})</div>
+      </div>
+      ${pending.length===0?`<div class="card"><div class="empty" style="padding:28px"><div class="empty-icon">✅</div><h4>All clear!</h4><p>No pending reminders</p></div></div>`
+        :`<div style="display:grid;gap:8px">
+          ${pending.map(r=>{const c=r.customerId?DB.customers.find(r.customerId):null;const od=r.dueDate&&new Date(r.dueDate)<new Date();
+            return`<div class="card" style="display:flex;align-items:center;gap:10px;padding:12px 16px">
+              <button class="btn btn-success btn-sm" onclick="remDone3('${r.id}')">${icon('check')} Done</button>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:14px;font-weight:500">${r.note}</div>
+                ${c?`<div class="c-muted" style="font-size:12px">${c.name}${c.customFields?.vehicle?' · '+c.customFields.vehicle:''}</div>`:''}
+                ${r.dueDate?`<div style="font-size:12px;color:${od?'var(--red)':'var(--amber)'}">${od?'⚠ Overdue: ':'Due: '}${fmtD(r.dueDate)}</div>`:''}
+              </div>
+              ${c?.phone?`<button class="btn btn-wa btn-sm" onclick="waShare('${c.phone}','Hi ${c.name.split(' ')[0]}, ${r.note}')">${icon('wa')}</button>`:''}
+              <button class="btn btn-danger btn-xs btn-icon" onclick="remDel('${r.id}')">${icon('trash')}</button>
+            </div>`;}).join('')}
+        </div>`}
+    </div>
+    ${done.length?`<div class="section-label mb8">Completed (${done.length})</div>
+      <div class="card card-0"><div class="tbl-wrap"><table>
+        <thead><tr><th>Note</th><th>Customer</th></tr></thead>
+        <tbody>${done.slice().reverse().slice(0,30).map(r=>{const c=r.customerId?DB.customers.find(r.customerId):null;
+          return`<tr class="no-hover"><td class="c-muted">${r.note}</td><td>${c?c.name:'—'}</td></tr>`;}).join('')}
+        </tbody>
+      </table></div></div>`:''}
+  `;
+}
+
+function openReminderModal(presetCust, presetBillId) {
+  const custs = DB.customers.all();
+  const suggs = ['Order ready for pickup','Follow up payment','Service due','Measurement required','Trial fitting ready'];
+  // If opened from a bill, pre-fill note and lock bill context
+  const bill = presetBillId ? DB.bills.find(presetBillId) : null;
+  const preNote = bill ? `Follow up payment — ${bill.number}` : '';
+  openModal(`
+    <div class="modal-head"><h3>New Reminder</h3><button class="x-btn" onclick="closeModal()">${icon('x')}</button></div>
+    <div class="modal-body"><div class="form-grid">
+      ${bill ? `<div style="background:var(--amber-bg);border:1px solid rgba(245,166,35,0.2);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--amber)">
+        🔗 Linked to <strong>${bill.number}</strong> — ${fmt(bill.total)} · This reminder will auto-close when the bill is marked paid.
+      </div>` : ''}
+      <input type="hidden" id="r-bill" value="${presetBillId||''}"/>
+      <div class="field"><label>Customer (optional)</label>
+        <select id="r-cust"><option value="">No customer</option>
+          ${custs.map(c=>`<option value="${c.id}" ${presetCust===c.id?'selected':''}>${c.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Note <span class="req">*</span></label><input id="r-note" value="${preNote}" placeholder="What to remember…"/></div>
+      <div class="quick-tags">${suggs.map(s=>`<button type="button" class="qtag" onclick="document.getElementById('r-note').value='${s}'">${s}</button>`).join('')}</div>
+      <div class="field"><label>Due Date</label><input id="r-due" type="date"/></div>
+    </div></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="remSave()">${icon('check')} Add Reminder</button>
+    </div>
+  `);
+}
+
+function remSave(){
+  const note=document.getElementById('r-note').value.trim();
+  if(!note){toast('Enter a note','err');return;}
+  const billId = document.getElementById('r-bill')?.value || undefined;
+  DB.reminders.create({
+    customerId: document.getElementById('r-cust').value||undefined,
+    note,
+    dueDate: document.getElementById('r-due').value||undefined,
+    billId,
+  });
+  toast('Reminder added'+(billId?' — will auto-close when bill is paid':'')); closeModal();
+  // Return to correct page after saving
+  if(PAGE==='reminders') pgReminders(); else if(PAGE==='bill-detail') pgBillDetail(); else pgReminders();
+}
+function remDone3(id){DB.reminders.update(id,{done:true});toast('Done ✓');pgReminders();}
+function remDel(id){DB.reminders.remove(id);toast('Deleted');pgReminders();}
+
+// ══════════════════════════════════════════════════════════════
+//  EXPENSES
+// ══════════════════════════════════════════════════════════════
+// ── Expense filter state ──
+// mode: 'month' | 'quarter' | 'year'
+let expFilterMode  = 'month';
+let expFilterMonth = today().slice(0,7);           // YYYY-MM  (single month)
+let expFilterQ     = { year: new Date().getFullYear(), q: Math.ceil((new Date().getMonth()+1)/3) };
+let expFilterYear  = new Date().getFullYear();
+
+// Returns true if a date string (YYYY-MM-DD or ISO) is inside the active filter
+function expDateMatch(dateStr) {
+  const d = (dateStr||'').slice(0,7); // YYYY-MM
+  if(expFilterMode==='month')   return d === expFilterMonth;
+  if(expFilterMode==='quarter'){
+    const [y,m] = d.split('-').map(Number);
+    const qMonths = [[1,2,3],[4,5,6],[7,8,9],[10,11,12]][expFilterQ.q-1];
+    return y===expFilterQ.year && qMonths.includes(m);
+  }
+  if(expFilterMode==='year'){
+    return d.startsWith(String(expFilterYear));
+  }
+  return false;
+}
+
+// Human-readable label for the current filter
+function expFilterLabel() {
+  if(expFilterMode==='month')   return fmtM(expFilterMonth);
+  if(expFilterMode==='quarter') return `Q${expFilterQ.q} ${expFilterQ.year}`;
+  if(expFilterMode==='year')    return String(expFilterYear);
+  return '';
+}
+
+function pgExpenses() {
+  document.getElementById('topbar-actions').innerHTML =
+    `<button class="btn btn-primary" onclick="expModal()">${icon('plus')} <span>Add Overhead Expense</span></button>`;
+
+  // ── Data ──
+  const allOverhead  = DB.expenses.all().filter(e => expDateMatch(e.date));
+  const overheadTotal = allOverhead.reduce((s,e)=>s+e.amount,0);
+  const byCat = {};
+  allOverhead.forEach(e=>{byCat[e.category]=(byCat[e.category]||0)+e.amount;});
+
+  const jobCostBills = CFG.jobCostTracking
+    ? DB.bills.all().filter(b => b.jobCost && b.status==='paid' && expDateMatch(b.paidAt||b.createdAt))
+    : [];
+  const jobCostTotal  = jobCostBills.reduce((s,b)=>s+b.jobCost,0);
+  const totalCosts    = overheadTotal + jobCostTotal;
+
+  // Revenue = all paid bills in period
+  const revenueBills  = DB.bills.all().filter(b => b.status==='paid' && expDateMatch(b.paidAt||b.createdAt));
+  const totalRevenue  = revenueBills.reduce((s,b)=>s+b.total,0);
+
+  const grossMargin   = totalRevenue - jobCostTotal;
+  const netMargin     = grossMargin  - overheadTotal;
+  const grossMarginPct = totalRevenue>0 ? Math.round(grossMargin/totalRevenue*100) : 0;
+  const netMarginPct   = totalRevenue>0 ? Math.round(netMargin/totalRevenue*100)   : 0;
+
+  // ── Build filter UI ──
+  const yr = new Date().getFullYear();
+  const months12 = [];
+  for(let i=11;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);months12.push(d.toISOString().slice(0,7));}
+
+  const filterUI = `
+    <div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--radius);padding:16px 18px;margin-bottom:20px">
+      <div class="flex items-center gap8 mb12 wrap">
+        <span style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:0.05em">Filter by</span>
+        ${['month','quarter','year'].map(m=>`
+          <button class="btn ${expFilterMode===m?'btn-primary':'btn-ghost'} btn-sm"
+            onclick="expFilterMode='${m}';pgExpenses()">
+            ${{month:'Month',quarter:'Quarter',year:'Year'}[m]}
+          </button>`).join('')}
+        <button class="btn btn-ghost btn-sm" onclick="expExport()" style="margin-left:auto">${icon('download')} Export</button>
+      </div>
+
+      ${expFilterMode==='month' ? `
+        <div class="flex items-center gap8 wrap">
+          ${months12.map(m=>`<button class="btn btn-sm ${expFilterMonth===m?'btn-primary':'btn-ghost'}"
+            onclick="expFilterMonth='${m}';pgExpenses()">${fmtM(m)}</button>`).join('')}
+        </div>` : ''}
+
+      ${expFilterMode==='quarter' ? `
+        <div class="flex items-center gap8 wrap">
+          ${[yr-1,yr].flatMap(y=>[1,2,3,4].map(q=>({y,q}))).map(({y,q})=>{
+            const active = expFilterQ.year===y && expFilterQ.q===q;
+            return`<button class="btn btn-sm ${active?'btn-primary':'btn-ghost'}"
+              onclick="expFilterQ={year:${y},q:${q}};pgExpenses()">Q${q} ${y}</button>`;
+          }).join('')}
+        </div>` : ''}
+
+      ${expFilterMode==='year' ? `
+        <div class="flex items-center gap8">
+          ${[yr-2,yr-1,yr].map(y=>`<button class="btn btn-sm ${expFilterYear===y?'btn-primary':'btn-ghost'}"
+            onclick="expFilterYear=${y};pgExpenses()">${y}</button>`).join('')}
+        </div>` : ''}
+
+      <div style="margin-top:12px;font-size:12px;color:var(--t3)">
+        Showing: <strong style="color:var(--t2)">${expFilterLabel()}</strong>
+      </div>
+    </div>`;
+
+  // ── KPI rows ──
+  const kpiCard = (label, value, color, sub) =>
+    `<div style="background:var(--s3);border:1px solid var(--b2);border-radius:var(--radius-sm);padding:14px 16px">
+      <div class="section-label mb4">${label}</div>
+      <div style="font-family:Syne,sans-serif;font-size:20px;font-weight:700;color:${color}">${fmt(value)}</div>
+      ${sub?`<div style="font-size:11px;color:var(--t3);margin-top:3px">${sub}</div>`:''}
+    </div>`;
+
+  const kpiRow1 = CFG.jobCostTracking ? `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+      ${kpiCard('Job Costs', jobCostTotal, 'var(--amber)', `From ${jobCostBills.length} paid job${jobCostBills.length!==1?'s':''}`)}
+      ${kpiCard('Overhead Costs', overheadTotal, 'var(--red)', 'Rent, salaries, electricity')}
+      ${kpiCard('Total Costs', totalCosts, 'var(--red)', 'Job costs + overhead')}
+    </div>` : `
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:12px">
+      ${kpiCard('Overhead Costs', overheadTotal, 'var(--red)', 'Rent, salaries, electricity')}
+      ${kpiCard('Total Costs', totalCosts, 'var(--red)', 'All money spent')}
+    </div>`;
+
+  const kpiRow2 = CFG.jobCostTracking ? `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+      ${kpiCard('Total Revenue', totalRevenue, 'var(--green)', `From ${revenueBills.length} paid bill${revenueBills.length!==1?'s':''}`)}
+      ${kpiCard('Gross Margin', grossMargin,
+        grossMargin>=0?'var(--green)':'var(--red)',
+        `Revenue − Job Costs · ${grossMarginPct}%`)}
+      <div style="background:${netMargin>=0?'var(--green-bg)':'var(--red-bg)'};border:1px solid ${netMargin>=0?'rgba(46,204,143,0.3)':'rgba(255,92,106,0.3)'};border-radius:var(--radius-sm);padding:14px 16px">
+        <div class="section-label mb4">Net Margin</div>
+        <div style="font-family:Syne,sans-serif;font-size:20px;font-weight:700;color:${netMargin>=0?'var(--green)':'var(--red)'}">${fmt(netMargin)}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:3px">Gross − Overhead · ${netMarginPct}%</div>
+      </div>
+    </div>` : '';
+
+  document.getElementById('content').innerHTML = filterUI + kpiRow1 + kpiRow2 + `
+
+    ${CFG.jobCostTracking && jobCostBills.length>0 ? `
+    <div class="card card-0 mb16">
+      <div class="card-header" style="padding:14px 18px 0">
+        <span class="card-title">Job Costs <span style="font-size:11px;font-weight:400;color:var(--t3)">— auto-pulled from paid bills</span></span>
+        <span class="c-amber mono fw6">${fmt(jobCostTotal)}</span>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Date Paid</th><th>Bill</th><th>Customer</th><th>Revenue</th><th>Job Cost</th><th>Margin</th></tr></thead>
+        <tbody>
+          ${jobCostBills.sort((a,b)=>new Date(b.paidAt)-new Date(a.paidAt)).map(b=>{
+            const c=DB.customers.find(b.customerId);
+            const margin=b.total-b.jobCost;
+            const pct=b.total>0?Math.round(margin/b.total*100):0;
+            return`<tr onclick="go('bill-detail','${b.id}')">
+              <td class="mono">${fmtD(b.paidAt)}</td>
+              <td class="mono c-accent">${b.number}</td>
+              <td class="fw6">${c?c.name:'—'}</td>
+              <td class="mono c-green">${fmt(b.total)}</td>
+              <td class="mono c-amber">${fmt(b.jobCost)}</td>
+              <td class="mono fw6 ${margin>=0?'c-green':'c-red'}">${fmt(margin)} <span style="font-size:10px">(${pct}%)</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>
+    </div>` : CFG.jobCostTracking ? `
+    <div class="card mb16" style="border-color:rgba(245,166,35,0.2)">
+      <div style="color:var(--amber);font-size:13px">No paid bills with job costs in this period.</div>
+    </div>` : ''}
+
+    <div style="display:grid;grid-template-columns:240px 1fr;gap:18px;align-items:start">
+      <div class="card">
+        <div class="card-title mb12">Overhead Costs by Category</div>
+        ${Object.keys(byCat).length===0
+          ? `<div class="c-muted" style="font-size:13px">No overhead costs logged</div>`
+          : Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>{
+              const pct=overheadTotal>0?Math.round(amt/overheadTotal*100):0;
+              return`<div class="mb12">
+                <div class="flex justify-between mb4"><span style="font-size:13px">${cat}</span><span class="mono c-red" style="font-size:13px">${fmt(amt)}</span></div>
+                <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:var(--red)"></div></div>
+              </div>`;}).join('')}
+      </div>
+      <div class="card card-0">
+        <div class="card-header" style="padding:14px 18px 0">
+          <span class="card-title">Overhead Costs</span>
+          <span class="c-red mono fw6">${fmt(overheadTotal)}</span>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th></th></tr></thead>
+          <tbody>
+            ${allOverhead.length===0
+              ? `<tr class="no-hover"><td colspan="5"><div class="empty"><div class="empty-icon">💸</div><h4>No overhead costs in this period</h4><p>Add rent, salaries, electricity etc.</p></div></td></tr>`
+              : allOverhead.slice().reverse().map(e=>`<tr class="no-hover">
+                  <td class="mono">${fmtD(e.date)}</td>
+                  <td><span class="badge badge-gray">${e.category}</span></td>
+                  <td class="c-t2">${e.description||'—'}</td>
+                  <td class="mono c-red fw6">${fmt(e.amount)}</td>
+                  <td><button class="btn btn-danger btn-xs btn-icon" onclick="expDel('${e.id}')">${icon('trash')}</button></td>
+                </tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  `;
+}
+
+function expModal(){
+  openModal(`
+    <div class="modal-head"><h3>Add Overhead Cost</h3><button class="x-btn" onclick="closeModal()">${icon('x')}</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-row">
+        <div class="field"><label>Category <span class="req">*</span></label>
+          <select id="ex-cat">${CFG.expenseCategories.map(c=>`<option>${c}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>Amount <span class="req">*</span></label>
+          <div class="input-prefix"><span>${CFG.currency}</span><input id="ex-amt" type="number" placeholder="0"/></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Date <span class="req">*</span></label><input id="ex-date" type="date" value="${today()}"/></div>
+        <div class="field"><label>Description</label><input id="ex-desc" placeholder="What was it for?"/></div>
+      </div>
+    </div></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="expSave()">${icon('check')} Add</button>
+    </div>
+  `);
+}
+
+function expSave(){
+  const amt=parseFloat(document.getElementById('ex-amt').value);
+  const date=document.getElementById('ex-date').value;
+  if(!amt||!date){toast('Amount and date required','err');return;}
+  DB.expenses.create({category:document.getElementById('ex-cat').value,amount:amt,date,description:document.getElementById('ex-desc').value.trim()||undefined});
+  toast('Overhead cost added'); closeModal(); pgExpenses();
+}
+function expDel(id){DB.expenses.remove(id);toast('Deleted');pgExpenses();}
+function expExport(){
+  const label = expFilterLabel().replace(/[^a-zA-Z0-9]/g,'-');
+  let csv='Date,Type,Category,Description,Amount,Bill No,Customer\n';
+  DB.expenses.all().filter(e=>expDateMatch(e.date)).forEach(e=>{
+    csv+=`"${e.date}","Overhead Cost","${e.category}","${e.description||''}","${e.amount}","",""\n`;
+  });
+  if(CFG.jobCostTracking){
+    DB.bills.all().filter(b=>b.jobCost&&b.status==='paid'&&expDateMatch(b.paidAt||b.createdAt)).forEach(b=>{
+      const c=DB.customers.find(b.customerId);
+      csv+=`"${(b.paidAt||b.createdAt).slice(0,10)}","Job Cost","Chemicals & Products","${b.number}","${b.jobCost}","${b.number}","${c?c.name:''}"\n`;
+    });
+  }
+  csvDownload(csv,`expenses-${label}.csv`);
+  toast('Downloaded');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  REPORTS — Monthly / Quarterly / Yearly
+// ══════════════════════════════════════════════════════════════
+let reportView = 'monthly'; // monthly | quarterly | yearly
+
+function buildMonthData(months) {
+  const bills = DB.bills.all();
+  const exps  = DB.expenses.all();
+  return months.map(m=>{
+    const mBills   = bills.filter(b=>monthOf(b.createdAt)===m);
+    const billed   = mBills.reduce((s,b)=>s+b.total,0);
+    const collected= mBills.filter(b=>b.status==='paid').reduce((s,b)=>s+b.total,0);
+    const spent    = exps.filter(e=>e.date.startsWith(m)).reduce((s,e)=>s+e.amount,0);
+    const jobCostTotal = CFG.jobCostTracking ? mBills.filter(b=>b.status==='paid'&&b.jobCost).reduce((s,b)=>s+b.jobCost,0) : 0;
+    const grossMargin  = collected - jobCostTotal;
+    const netProfit    = grossMargin - spent;  // spent = overhead expenses
+    return {m,label:fmtM(m),billed,collected,spent,net:netProfit,grossMargin,jobCostTotal};
+  });
+}
+
+function getLast12Months() {
+  const ms=[];
+  for(let i=11;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);ms.push(d.toISOString().slice(0,7));}
+  return ms;
+}
+
+function getMonthsForYear(year) {
+  return Array.from({length:12},(_,i)=>`${year}-${String(i+1).padStart(2,'0')}`);
+}
+
+function getQuarterData(year) {
+  const qs=[{label:'Q1 (Jan–Mar)',months:['01','02','03']},{label:'Q2 (Apr–Jun)',months:['04','05','06']},
+            {label:'Q3 (Jul–Sep)',months:['07','08','09']},{label:'Q4 (Oct–Dec)',months:['10','11','12']}];
+  return qs.map(q=>{
+    const monthKeys = q.months.map(m=>`${year}-${m}`);
+    const data = buildMonthData(monthKeys);
+    return {label:q.label,billed:data.reduce((s,d)=>s+d.billed,0),collected:data.reduce((s,d)=>s+d.collected,0),
+            spent:data.reduce((s,d)=>s+d.spent,0),net:data.reduce((s,d)=>s+d.net,0)};
+  });
+}
+
+function renderChart(data, maxH=140) {
+  const maxVal = Math.max(...data.map(d=>Math.max(d.collected,d.spent||0,d.jobCostTotal||0)),1);
+  const barH   = h => Math.max(Math.round((h/maxVal)*(maxH-20)), 2);
+  const showJC = CFG.jobCostTracking && data.some(d=>d.jobCostTotal>0);
+  return `
+    <div class="chart-legend">
+      <div class="cleg"><div class="cleg-dot" style="background:var(--green)"></div>Total Revenue</div>
+      <div class="cleg"><div class="cleg-dot" style="background:var(--red)"></div>Overhead Costs</div>
+      ${showJC?`<div class="cleg"><div class="cleg-dot" style="background:var(--amber)"></div>Job Costs</div>`:''}
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:6px;height:${maxH}px;padding:8px 0 0;border-bottom:1px solid var(--b1)">
+      ${data.map(d=>`
+        <div style="flex:1;display:flex;align-items:flex-end;gap:2px;justify-content:center">
+          <div style="width:${showJC?'30%':'45%'};height:${barH(d.collected)}px;background:var(--green);border-radius:3px 3px 0 0" title="${fmt(d.collected)}"></div>
+          ${showJC?`<div style="width:30%;height:${barH(d.jobCostTotal||0)}px;background:var(--amber);border-radius:3px 3px 0 0" title="Job Costs: ${fmt(d.jobCostTotal||0)}"></div>`:''}
+          <div style="width:${showJC?'30%':'45%'};height:${barH(d.spent)}px;background:var(--red);border-radius:3px 3px 0 0" title="Overhead: ${fmt(d.spent)}"></div>
+        </div>`).join('')}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:5px">
+      ${data.map(d=>`<div style="flex:1;text-align:center;font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${d.label.split(' ')[0]}</div>`).join('')}
+    </div>
+  `;
+}
+
+function pgReports() {
+  const yearNow = new Date().getFullYear();
+  const years = [yearNow, yearNow-1, yearNow-2];
+  document.getElementById('topbar-actions').innerHTML = `
+    <button class="btn btn-ghost btn-sm" onclick="reportsExport()">${icon('download')} Export</button>
+  `;
+
+  let inner='';
+  if(reportView==='monthly'){
+    const months = getLast12Months();
+    const data   = buildMonthData(months);
+    const totBilled    = data.reduce((s,d)=>s+d.billed,0);
+    const totCollected = data.reduce((s,d)=>s+d.collected,0);
+    const totSpent     = data.reduce((s,d)=>s+d.spent,0);
+    const totNet       = totCollected - totSpent;
+    inner=`
+      <div class="card mb16">
+        <div class="card-header"><span class="card-title">Last 12 Months — Collected vs Expenses</span></div>
+        ${renderChart(data)}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
+        <div class="kpi accent"><div class="kpi-label">Total Billed</div><div class="kpi-value">${fmt(totBilled)}</div></div>
+        <div class="kpi green"><div class="kpi-label">Total Revenue</div><div class="kpi-value">${fmt(totCollected)}</div></div>
+        <div class="kpi red"><div class="kpi-label">Overhead Costs</div><div class="kpi-value">${fmt(totSpent)}</div></div>
+        <div class="kpi ${totNet>=0?'green':'red'}"><div class="kpi-label">Net Margin</div><div class="kpi-value">${fmt(totNet)}</div></div>
+      </div>
+      <div class="card card-0"><div class="tbl-wrap"><table>
+        <thead><tr><th>Month</th><th>Billed</th><th>Collected</th>${CFG.jobCostTracking?'<th>Job Costs</th><th>Gross Margin</th>':''}<th>Overhead</th><th>Net P/L</th></tr></thead>
+        <tbody>${data.slice().reverse().map(d=>`<tr class="no-hover">
+          <td class="fw6">${d.label}</td>
+          <td class="mono c-accent">${fmt(d.billed)}</td>
+          <td class="mono c-green">${fmt(d.collected)}</td>
+          <td class="mono c-red">${fmt(d.spent)}</td>
+          <td class="mono fw6 ${d.net>=0?'c-green':'c-red'}">${fmt(d.net)}</td>
+          ${CFG.jobCostTracking?`<td class="mono c-muted">${d.jobCostTotal?fmt(d.jobCostTotal):'—'}</td><td class="mono ${d.grossMargin>=0?'c-green':'c-red'}">${fmt(d.grossMargin)}</td>`:''}
+        </tr>`).join('')}
+        </tbody>
+      </table></div></div>`;
+  }
+
+  else if(reportView==='quarterly'){
+    const quarterRows = years.map(y=>({year:y,qs:getQuarterData(y)}));
+    inner = years.map(y=>{
+      const qs=getQuarterData(y);
+      const totC=qs.reduce((s,q)=>s+q.collected,0);
+      const totS=qs.reduce((s,q)=>s+q.spent,0);
+      return`<div class="card mb16">
+        <div class="card-header"><span class="card-title">FY ${y}</span>
+          <span style="font-size:13px;color:${totC-totS>=0?'var(--green)':'var(--red)'};font-weight:600">Net Margin: ${fmt(totC-totS)}</span>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Quarter</th><th>Billed</th><th>Total Revenue</th><th>Overhead Costs</th><th>Net Margin</th></tr></thead>
+          <tbody>${qs.map(q=>`<tr class="no-hover">
+            <td class="fw6">${q.label}</td>
+            <td class="mono c-accent">${fmt(q.billed)}</td>
+            <td class="mono c-green">${fmt(q.collected)}</td>
+            <td class="mono c-red">${fmt(q.spent)}</td>
+            <td class="mono fw6 ${q.net>=0?'c-green':'c-red'}">${fmt(q.net)}</td>
+          </tr>`).join('')}
+          <tr class="no-hover" style="background:var(--s3)">
+            <td class="fw6">Total</td>
+            <td class="mono c-accent">${fmt(qs.reduce((s,q)=>s+q.billed,0))}</td>
+            <td class="mono c-green">${fmt(totC)}</td>
+            <td class="mono c-red">${fmt(totS)}</td>
+            <td class="mono fw6 ${totC-totS>=0?'c-green':'c-red'}">${fmt(totC-totS)}</td>
+          </tr></tbody>
+        </table></div>
+      </div>`;
+    }).join('');
+  }
+
+  else { // yearly
+    const yData = years.map(y=>{
+      const months = getMonthsForYear(y);
+      const data   = buildMonthData(months);
+      return {year:y,billed:data.reduce((s,d)=>s+d.billed,0),collected:data.reduce((s,d)=>s+d.collected,0),
+              spent:data.reduce((s,d)=>s+d.spent,0),net:data.reduce((s,d)=>s+d.net,0),months:data};
+    });
+    inner = `
+      <div class="card mb16">
+        <div class="card-header"><span class="card-title">Year-over-Year Summary</span></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Year</th><th>Billed</th><th>Total Revenue</th><th>Overhead Costs</th><th>Net Margin</th></tr></thead>
+          <tbody>${yData.map(d=>`<tr class="no-hover">
+            <td class="fw6">${d.year}</td>
+            <td class="mono c-accent">${fmt(d.billed)}</td>
+            <td class="mono c-green">${fmt(d.collected)}</td>
+            <td class="mono c-red">${fmt(d.spent)}</td>
+            <td class="mono fw6 ${d.net>=0?'c-green':'c-red'}">${fmt(d.net)}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </div>
+      ${yData.map(y=>`
+        <div class="card mb16">
+          <div class="card-header"><span class="card-title">Month-by-Month ${y.year}</span></div>
+          ${renderChart(y.months,120)}
+          <div class="tbl-wrap mt12"><table>
+            <thead><tr><th>Month</th><th>Revenue</th><th>Overhead</th><th>Net Margin</th></tr></thead>
+            <tbody>${y.months.map(m=>`<tr class="no-hover">
+              <td>${m.label}</td>
+              <td class="mono c-green">${fmt(m.collected)}</td>
+              <td class="mono c-red">${fmt(m.spent)}</td>
+              <td class="mono ${m.net>=0?'c-green':'c-red'}">${fmt(m.net)}</td>
+            </tr>`).join('')}</tbody>
+          </table></div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  document.getElementById('content').innerHTML = `
+    <div class="flex gap8 mb16 wrap">
+      ${['monthly','quarterly','yearly'].map(v=>`
+        <button class="btn ${reportView===v?'btn-primary':'btn-ghost'}" onclick="reportView='${v}';pgReports()">${v.charAt(0).toUpperCase()+v.slice(1)}</button>
+      `).join('')}
+    </div>
+    ${inner}
+  `;
+}
+
+function reportsExport(){
+  const months=getLast12Months();
+  const data=buildMonthData(months);
+  let csv='Month,Billed,Collected,Expenses,Net P/L\n';
+  data.forEach(d=>{csv+=`"${d.label}","${d.billed}","${d.collected}","${d.spent}","${d.net}"\n`;});
+  csvDownload(csv,'shopbook-report.csv');
+  toast('Report exported');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DOCUMENTS — unified log of all estimates + bills
+// ══════════════════════════════════════════════════════════════
+// Documents state — type filter, date filter (shares expFilter* vars with Expenses), search
+let docFilter     = 'all';    // all | estimates | bills
+let docDateMode   = 'all';    // all | month | quarter | year  (own mode, independent of Expenses)
+let docDateMonth  = today().slice(0,7);
+let docDateQ      = { year: new Date().getFullYear(), q: Math.ceil((new Date().getMonth()+1)/3) };
+let docDateYear   = new Date().getFullYear();
+let docSearch     = '';
+
+// Returns true if a document's createdAt falls within the active doc date filter
+function docDateMatch(iso) {
+  const d = (iso||'').slice(0,7); // YYYY-MM
+  if(docDateMode==='all')     return true;
+  if(docDateMode==='month')   return d === docDateMonth;
+  if(docDateMode==='quarter'){
+    const [y,m] = d.split('-').map(Number);
+    const qMonths = [[1,2,3],[4,5,6],[7,8,9],[10,11,12]][docDateQ.q-1];
+    return y===docDateQ.year && qMonths.includes(m);
+  }
+  if(docDateMode==='year')    return d.startsWith(String(docDateYear));
+  return true;
+}
+
+function docDateLabel() {
+  if(docDateMode==='all')     return 'All time';
+  if(docDateMode==='month')   return fmtM(docDateMonth);
+  if(docDateMode==='quarter') return `Q${docDateQ.q} ${docDateQ.year}`;
+  if(docDateMode==='year')    return String(docDateYear);
+  return '';
+}
+
+function pgDocuments() {
+  document.getElementById('topbar-actions').innerHTML =
+    `<button class="btn btn-ghost btn-sm" onclick="docsExport()">${icon('download')} Export</button>`;
+
+  const yr = new Date().getFullYear();
+  const months12 = [];
+  for(let i=11;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);months12.push(d.toISOString().slice(0,7));}
+
+  // Merge estimates and bills, apply date + type + search filters
+  const ests  = DB.estimates.all().map(e=>({...e, _type:'estimate'}));
+  const bills = DB.bills.all().map(b=>({...b, _type:'bill'}));
+  let all = [...ests, ...bills]
+    .filter(d => docDateMatch(d.createdAt))
+    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+
+  if(docFilter==='estimates') all = all.filter(d=>d._type==='estimate');
+  if(docFilter==='bills')     all = all.filter(d=>d._type==='bill');
+  if(docSearch) {
+    const q = docSearch.toLowerCase();
+    all = all.filter(d=>{
+      const c = DB.customers.find(d.customerId);
+      return (d.number||'').toLowerCase().includes(q) ||
+             (c?.name||'').toLowerCase().includes(q) ||
+             (c?.phone||'').includes(q);
+    });
+  }
+
+  // Date filter UI — same visual pattern as Expenses
+  const dateFilterUI = `
+    <div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px">
+      <div class="flex items-center gap8 mb10 wrap">
+        <span style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:0.05em">Period</span>
+        ${['all','month','quarter','year'].map(m=>`
+          <button class="btn ${docDateMode===m?'btn-primary':'btn-ghost'} btn-sm"
+            onclick="docDateMode='${m}';pgDocuments()">
+            ${{all:'All Time',month:'Month',quarter:'Quarter',year:'Year'}[m]}
+          </button>`).join('')}
+      </div>
+      ${docDateMode==='month' ? `
+        <div class="flex items-center gap6 wrap mt8">
+          ${months12.map(m=>`<button class="btn btn-sm ${docDateMonth===m?'btn-primary':'btn-ghost'}"
+            onclick="docDateMonth='${m}';pgDocuments()">${fmtM(m)}</button>`).join('')}
+        </div>` : ''}
+      ${docDateMode==='quarter' ? `
+        <div class="flex items-center gap8 wrap mt8">
+          ${[yr-1,yr].flatMap(y=>[1,2,3,4].map(q=>({y,q}))).map(({y,q})=>`
+            <button class="btn btn-sm ${docDateQ.year===y&&docDateQ.q===q?'btn-primary':'btn-ghost'}"
+              onclick="docDateQ={year:${y},q:${q}};pgDocuments()">Q${q} ${y}</button>`).join('')}
+        </div>` : ''}
+      ${docDateMode==='year' ? `
+        <div class="flex items-center gap8 mt8">
+          ${[yr-2,yr-1,yr].map(y=>`<button class="btn btn-sm ${docDateYear===y?'btn-primary':'btn-ghost'}"
+            onclick="docDateYear=${y};pgDocuments()">${y}</button>`).join('')}
+        </div>` : ''}
+      <div style="margin-top:10px;font-size:11px;color:var(--t3)">
+        Showing: <strong style="color:var(--t2)">${docDateLabel()}</strong>
+        · <span>${all.length} document${all.length!==1?'s':''}</span>
+      </div>
+    </div>`;
+
+  document.getElementById('content').innerHTML = dateFilterUI + `
+    <div class="flex items-center gap8 mb12 wrap">
+      <div class="flex gap6">
+        ${['all','estimates','bills'].map(f=>`<button class="btn ${docFilter===f?'btn-primary':'btn-ghost'} btn-sm"
+          onclick="docFilter='${f}';pgDocuments()">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+      </div>
+      <div class="search-box flex-1" style="max-width:280px">
+        ${icon('search')}<input placeholder="Search number, customer…" value="${docSearch}"
+          oninput="docSearch=this.value;pgDocuments()"/>
+      </div>
+    </div>
+
+    <div class="card card-0"><div class="tbl-wrap"><table>
+      <thead><tr><th>Type</th><th>Number</th><th>Customer</th><th>Date</th><th>Amount</th><th>Status</th><th>Shared</th><th></th></tr></thead>
+      <tbody>
+        ${all.length===0
+          ? `<tr class="no-hover"><td colspan="8"><div class="empty"><div class="empty-icon">📂</div><h4>No documents</h4><p>No estimates or bills in this period</p></div></td></tr>`
+          : all.map(d=>{
+              const c   = DB.customers.find(d.customerId);
+              const amt = d.total || lineTotal(d.items||[]);
+              const isEst = d._type==='estimate';
+              const destPage = isEst ? 'est-detail' : 'bill-detail';
+              const statusBadge = isEst
+                ? `<span class="badge ${d.status==='converted'?'badge-green':d.status==='cancelled'?'badge-red':'badge-amber'}">${d.status}</span>`
+                : `<span class="badge ${d.status==='paid'?'badge-green':'badge-red'}">${d.status}</span>`;
+              const sharedCell = d.sharedAt
+                ? `<span style="font-size:11px;color:var(--green)">✓ ${fmtD(d.sharedAt)}</span>`
+                : `<span class="c-muted" style="font-size:11px">Not shared</span>`;
+              return `<tr onclick="go('${destPage}','${d.id}')">
+                <td><span class="badge ${isEst?'badge-blue':'badge-purple'}">${isEst?'EST':'BILL'}</span></td>
+                <td class="mono c-accent">${d.number}</td>
+                <td class="fw6">${c?c.name:'—'}</td>
+                <td class="c-t2">${fmtD(d.createdAt)}</td>
+                <td class="mono">${fmt(amt)}</td>
+                <td>${statusBadge}</td>
+                <td>${sharedCell}${d.sharedCount>1?`<span style="font-size:10px;color:var(--t3);margin-left:4px">(×${d.sharedCount})</span>`:''}</td>
+                <td onclick="event.stopPropagation()" style="display:flex;gap:5px">
+                  ${c?.phone ? `<button class="btn btn-wa btn-xs btn-icon"
+                    onclick="${isEst?`waShareDoc('estimates','${d.id}')`:`waShareDoc('bills','${d.id}')`}"
+                    title="Send WhatsApp">${icon('wa')}</button>` : ''}
+                  <button class="btn btn-ghost btn-xs btn-icon"
+                    onclick="printDoc('${isEst?'estimate':'bill'}',DB.${isEst?'estimates':'bills'}.find('${d.id}'))"
+                    title="Print / PDF">${icon('print')}</button>
+                </td>
+              </tr>`;
+            }).join('')}
+      </tbody>
+    </table></div></div>
+  `;
+}
+
+function docsExport() {
+  const ests  = DB.estimates.all();
+  const bills = DB.bills.all();
+  let all = [...ests.map(e=>({...e,_type:'Estimate'})), ...bills.map(b=>({...b,_type:'Bill'}))]
+    .filter(d => docDateMatch(d.createdAt))
+    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const label = docDateLabel().replace(/[^a-zA-Z0-9]/g,'-');
+  let csv = 'Type,Number,Customer,Phone,Date,Amount,Status,Shared On,Share Count\n';
+  all.forEach(d=>{
+    const c=DB.customers.find(d.customerId);
+    const amt=d.total||lineTotal(d.items||[]);
+    csv+=`"${d._type}","${d.number||''}","${c?c.name:''}","${c?.phone||''}","${fmtD(d.createdAt)}","${amt}","${d.status||''}","${d.sharedAt?fmtD(d.sharedAt):''}","${d.sharedCount||0}"\n`;
+  });
+  csvDownload(csv,`documents-${label}.csv`);
+  toast('Downloaded');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DEMO SEED
+// ══════════════════════════════════════════════════════════════
+function seedDemo(){ /* seed disabled in live version */ }
+
+function init(){
+  document.getElementById('sb-name').textContent = CFG.shop.name;
+  document.getElementById('sb-tag').textContent  = CFG.shop.tag;
+  document.title = CFG.shop.name + ' · ShopBook';
+  _loadQueue();
+  seedDemo();
+  updateBadges();
+  go('dashboard');
+  // Pull latest from Sheets after UI loads
+  setTimeout(_pullFromSheets, 1000);
+}
+
+init();
+</script>
+</body>
+</html>
